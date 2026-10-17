@@ -1,6 +1,12 @@
 import pytest
 
-from hopfilter.errors import HopfilterError, IndexNotBuiltError, InvalidConfigError
+from hopfilter.errors import (
+    DatasetIntegrityError,
+    DatasetNotFoundError,
+    HopfilterError,
+    IndexNotBuiltError,
+    InvalidConfigError,
+)
 
 
 @pytest.mark.parametrize(
@@ -8,6 +14,8 @@ from hopfilter.errors import HopfilterError, IndexNotBuiltError, InvalidConfigEr
     [
         (InvalidConfigError, ValueError),
         (IndexNotBuiltError, RuntimeError),
+        (DatasetNotFoundError, FileNotFoundError),
+        (DatasetIntegrityError, RuntimeError),
     ],
 )
 def test_error_is_catchable_as_library_and_builtin_type(
