@@ -1,0 +1,46 @@
+repos:
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v6.0.0
+      hooks:
+          - id: trailing-whitespace
+          - id: end-of-file-fixer
+          - id: mixed-line-ending
+            args: [--fix=lf]
+          - id: check-yaml
+          - id: check-toml
+          - id: check-merge-conflict
+          - id: check-added-large-files
+            args: [--maxkb=512]
+
+    - repo: local
+      hooks:
+          - id: no-tabs
+            name: no tab indentation
+            language: pygrep
+            entry: "\t"
+            types: [text]
+
+          - id: ruff-check
+            name: ruff check
+            language: system
+            entry: uv run --no-sync ruff check --fix
+            types: [python]
+
+          - id: ruff-format
+            name: ruff format
+            language: system
+            entry: uv run --no-sync ruff format
+            types: [python]
+
+          - id: mypy
+            name: mypy --strict
+            language: system
+            entry: uv run --no-sync mypy
+            types_or: [python, pyi]
+            pass_filenames: false
+
+          - id: clang-format
+            name: clang-format
+            language: system
+            entry: uv run --no-sync clang-format -i
+            types_or: [c++, c]
