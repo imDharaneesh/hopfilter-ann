@@ -1,0 +1,17 @@
+.git
+.github
+.venv
+data
+build
+build-*
+dist
+wheelhouse
+*.egg-info
+**/__pycache__
+.mypy_cache
+.ruff_cache
+.pytest_cache
+.hypothesis
+benchmarks/results
+docs
+site
