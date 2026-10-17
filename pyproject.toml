@@ -124,6 +124,7 @@ convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["D", "ANN", "PLR2004"]
+"benchmarks/**" = ["D"]
 
 [tool.ruff.format]
 indent-style = "space"
