@@ -405,6 +405,7 @@ dev = [
     { name = "clang-format" },
     { name = "clang-tidy" },
     { name = "hypothesis" },
+    { name = "mkdocs" },
     { name = "mkdocs-material" },
     { name = "mypy" },
     { name = "pre-commit" },
@@ -413,6 +414,7 @@ dev = [
     { name = "ruff" },
 ]
 docs = [
+    { name = "mkdocs" },
     { name = "mkdocs-material" },
 ]
 lint = [
@@ -435,6 +437,7 @@ dev = [
     { name = "clang-format", specifier = "==18.1.8" },
     { name = "clang-tidy", specifier = "==18.1.8" },
     { name = "hypothesis", specifier = ">=6.120" },
+    { name = "mkdocs", specifier = ">=1.6,<2" },
     { name = "mkdocs-material", specifier = ">=9.6" },
     { name = "mypy", specifier = ">=1.15" },
     { name = "pre-commit", specifier = ">=4.0" },
@@ -442,7 +445,10 @@ dev = [
     { name = "pytest-cov", specifier = ">=6.0" },
     { name = "ruff", specifier = ">=0.15" },
 ]
-docs = [{ name = "mkdocs-material", specifier = ">=9.6" }]
+docs = [
+    { name = "mkdocs", specifier = ">=1.6,<2" },
+    { name = "mkdocs-material", specifier = ">=9.6" },
+]
 lint = [
     { name = "clang-format", specifier = "==18.1.8" },
     { name = "clang-tidy", specifier = "==18.1.8" },

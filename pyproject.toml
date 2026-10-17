@@ -41,7 +41,7 @@ lint = [
     "pre-commit>=4.0",
     "clang-tidy==18.1.8",
 ]
-docs = ["mkdocs-material>=9.6"]
+docs = ["mkdocs>=1.6,<2", "mkdocs-material>=9.6"]
 dev = [
     { include-group = "test" },
     { include-group = "lint" },

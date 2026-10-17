@@ -1,0 +1,46 @@
+site_name: hopfilter-ann
+site_description: Two-tower retrieval with a from-scratch HNSW index and filter-aware search.
+repo_url: https://github.com/imDharaneesh/hopfilter-ann
+repo_name: imDharaneesh/hopfilter-ann
+edit_uri: edit/master/docs/
+strict: true
+
+theme:
+    name: material
+    features:
+        - navigation.sections
+        - navigation.top
+        - content.code.copy
+        - search.highlight
+    palette:
+        - media: "(prefers-color-scheme: light)"
+          scheme: default
+          toggle:
+              icon: material/brightness-7
+              name: Switch to dark mode
+        - media: "(prefers-color-scheme: dark)"
+          scheme: slate
+          toggle:
+              icon: material/brightness-4
+              name: Switch to light mode
+
+nav:
+    - Home: index.md
+    - Development: development.md
+    - Design: design.md
+    - Benchmarks: benchmarks.md
+
+markdown_extensions:
+    - admonition
+    - attr_list
+    - tables
+    - toc:
+          permalink: true
+    - pymdownx.details
+    - pymdownx.highlight
+    - pymdownx.inlinehilite
+    - pymdownx.superfences:
+          custom_fences:
+              - name: mermaid
+                class: mermaid
+                format: !!python/name:pymdownx.superfences.fence_code_format
