@@ -294,7 +294,7 @@ def main() -> None:
     }
     output = Path(config.results_path)
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(results, indent=4) + "\n", encoding="utf-8")
+    output.write_text(json.dumps(results, indent=4) + "\n", encoding="utf-8", newline="\n")
     print(f"wrote {output}")
 
 
