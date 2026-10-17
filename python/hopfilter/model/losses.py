@@ -5,6 +5,7 @@ from torch import Tensor
 from torch.nn import functional
 
 from hopfilter.errors import InvalidConfigError
+from hopfilter.model.frequency import ItemFrequencyEstimator
 
 DEFAULT_TEMPERATURE = 0.05
 
@@ -27,6 +28,29 @@ class InBatchSoftmaxLoss:
         """Return the mean in-batch softmax loss."""
         logits = in_batch_logits(user_vectors, item_vectors, self.temperature)
         return diagonal_cross_entropy(mask_duplicate_items(logits, item_indices))
+
+
+class LogQCorrectedLoss:
+    """In-batch softmax with every logit corrected by ``-log q`` of its column's item.
+
+    In-batch negatives are drawn in proportion to popularity. Subtracting the log of
+    each item's in-batch probability (Yi et al., RecSys 2019) removes that bias, so a
+    popular item is no longer penalized just for appearing as a negative more often.
+    Each call advances ``estimator`` by one step.
+    """
+
+    def __init__(
+        self, estimator: ItemFrequencyEstimator, temperature: float = DEFAULT_TEMPERATURE
+    ) -> None:
+        self.temperature = require_positive_temperature(temperature)
+        self._estimator = estimator
+
+    def __call__(self, user_vectors: Tensor, item_vectors: Tensor, item_indices: Tensor) -> Tensor:
+        """Return the mean logQ-corrected in-batch softmax loss."""
+        log_q = self._estimator.observe(item_indices)
+        logits = in_batch_logits(user_vectors, item_vectors, self.temperature)
+        corrected = logits - log_q.unsqueeze(0)
+        return diagonal_cross_entropy(mask_duplicate_items(corrected, item_indices))
 
 
 def require_positive_temperature(temperature: float) -> float:
