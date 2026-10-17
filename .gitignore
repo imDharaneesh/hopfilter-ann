@@ -33,7 +33,7 @@ htmlcov/
 *.pdb
 
 # datasets and generated benchmark output
-data/
+/data/
 benchmarks/results/raw/
 
 # editors and os
