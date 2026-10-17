@@ -150,6 +150,7 @@ hopfilter-ann/
         include/hopfilter/
             common/              version, types, errors, visited set, thread pool
             distance/            DistanceMetric, L2, InnerProduct, Cosine, kernels
+            storage/             VectorStore (aligned contiguous vectors)
             graph/               HnswGraph, LayerAssigner, NeighborSelector
             index/               HnswIndex, IndexConfig, HnswIndexBuilder
             filter/              FilterPredicate, AttributeStore, Selectivity
