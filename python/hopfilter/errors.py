@@ -16,3 +16,11 @@ class DatasetNotFoundError(HopfilterError, FileNotFoundError):
 
 class DatasetIntegrityError(HopfilterError, RuntimeError):
     """A downloaded archive failed its checksum or has an unexpected layout."""
+
+
+class EmptyDatasetError(HopfilterError, ValueError):
+    """An operation needs at least one row but received none."""
+
+
+class UnknownIdError(HopfilterError, KeyError):
+    """An id was not seen when the encoder was fitted."""
