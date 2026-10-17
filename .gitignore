@@ -1,0 +1,47 @@
+# build outputs
+build/
+build-*/
+out/
+dist/
+wheelhouse/
+_skbuild/
+*.egg-info/
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.hypothesis/
+.coverage
+coverage.xml
+htmlcov/
+
+# native artifacts
+*.so
+*.pyd
+*.dll
+*.dylib
+*.obj
+*.o
+*.a
+*.lib
+*.exp
+*.pdb
+
+# datasets and generated benchmark output
+data/
+benchmarks/results/raw/
+
+# editors and os
+.vs/
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# docs build
+site/
