@@ -34,7 +34,13 @@ hopfilter = "hopfilter.cli:main"
 
 [dependency-groups]
 test = ["pytest>=8.3", "pytest-cov>=6.0", "hypothesis>=6.120"]
-lint = ["ruff>=0.15", "mypy>=1.15", "clang-format==18.1.8", "pre-commit>=4.0"]
+lint = [
+    "ruff>=0.15",
+    "mypy>=1.15",
+    "clang-format==18.1.8",
+    "pre-commit>=4.0",
+    "clang-tidy==18.1.8",
+]
 docs = ["mkdocs-material>=9.6"]
 dev = [
     { include-group = "test" },
