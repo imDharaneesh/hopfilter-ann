@@ -29,6 +29,9 @@ dependencies = []
 Homepage = "https://github.com/imDharaneesh/hopfilter-ann"
 Issues = "https://github.com/imDharaneesh/hopfilter-ann/issues"
 
+[project.scripts]
+hopfilter = "hopfilter.cli:main"
+
 [dependency-groups]
 test = ["pytest>=8.3", "pytest-cov>=6.0", "hypothesis>=6.120"]
 lint = ["ruff>=0.15", "mypy>=1.15", "clang-format==18.1.8", "pre-commit>=4.0"]
@@ -73,6 +76,7 @@ markers = ["slow: long-running tests excluded from wheel smoke tests"]
 [tool.coverage.run]
 source = ["hopfilter"]
 branch = true
+omit = ["*/__main__.py"]
 
 [tool.coverage.report]
 fail_under = 85
