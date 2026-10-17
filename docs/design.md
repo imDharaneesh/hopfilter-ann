@@ -487,51 +487,195 @@ The Python error types are **implemented** in `hopfilter.errors`.
 
 ## 10. Python package
 
-### 10.1 Model and training (Planned, Phase 1)
+### 10.1 Data, model and training (Implemented, Phase 1)
+
+The training stack is an optional extra (`pip install hopfilter-ann[train]`) so that index-only users never install PyTorch. Nothing under `hopfilter.data`, `hopfilter.model` or `hopfilter.eval` is imported by `hopfilter/__init__.py`.
+
+| Module | Contents |
+|---|---|
+| `hopfilter.config` | `load_config(path, config_type)`: YAML into a frozen dataclass, rejecting unknown or mistyped keys |
+| `hopfilter.data.download` | `DatasetSpec`, `DATASETS` registry, `UrlFetcher` protocol, `DatasetDownloader` |
+| `hopfilter.data.movielens` | `MovieLens1MLoader`, `MovieLens25MLoader` |
+| `hopfilter.data.dataset` | `InteractionDataset`, column-name constants, `keep_positive` |
+| `hopfilter.data.splits` | `SplitConfig`, `TemporalSplitter`, `DataSplits` |
+| `hopfilter.data.encoding` | `IdEncoder`, `build_genre_matrix` |
+| `hopfilter.model.towers` | `TowerConfig`, `UserTower`, `ItemTower`, `TwoTowerModel` |
+| `hopfilter.model.losses` | `LossFunction` protocol, `InBatchSoftmaxLoss`, `LogQCorrectedLoss` |
+| `hopfilter.model.frequency` | `ItemFrequencyEstimator` |
+| `hopfilter.model.training` | `TrainerConfig`, `InteractionBatcher`, `Trainer`, `TrainingHistory` |
+| `hopfilter.eval.retrieval` | `ExactRetriever`, `PopularitySegmenter`, `RetrievalEvaluator`, `RetrievalReport` |
+
+#### Data
 
 ```mermaid
 classDiagram
+    class UrlFetcher {
+        <<protocol>>
+        +fetch(url, destination)
+    }
+    class HttpFetcher
+    class DatasetSpec {
+        +name: str
+        +url: str
+        +sha256: str
+        +directory_name: str
+    }
+    class DatasetDownloader {
+        +DatasetDownloader(fetcher, data_dir)
+        +download(spec) Path
+    }
     class DatasetLoader {
         <<protocol>>
-        +interactions() DataFrame
-        +item_attributes() DataFrame
+        +load() InteractionDataset
     }
-    class MovieLensLoader
-    class AmazonReviewsLoader
+    class MovieLens1MLoader
+    class MovieLens25MLoader
+    class InteractionDataset {
+        +interactions: DataFrame
+        +items: DataFrame
+    }
     class TemporalSplitter {
+        +TemporalSplitter(SplitConfig)
         +split(interactions) DataSplits
     }
-    class UserTower
-    class ItemTower
+    class DataSplits {
+        +train: DataFrame
+        +validation: DataFrame
+        +test: DataFrame
+    }
+    class IdEncoder {
+        +fit(values) IdEncoder
+        +encode(values) ndarray
+        +size: int
+    }
+    UrlFetcher <|.. HttpFetcher
+    DatasetDownloader --> UrlFetcher
+    DatasetDownloader ..> DatasetSpec
+    DatasetLoader <|.. MovieLens1MLoader
+    DatasetLoader <|.. MovieLens25MLoader
+    DatasetLoader ..> InteractionDataset : returns
+    TemporalSplitter ..> DataSplits : returns
+```
+
+- **Schema.** `interactions` has `user_id`, `item_id`, `rating`, `timestamp` (seconds since the epoch). `items` has `item_id`, `title`, `year` and `genres` (a list of strings). Both loaders normalize to this schema, so nothing downstream knows which MovieLens release it is reading.
+- **Download integrity.** Each `DatasetSpec` carries the SHA-256 of its archive. A mismatch raises `DatasetIntegrityError` and deletes the partial file. Extraction rejects archive members that would land outside the target directory. The fetcher is injected, so tests never touch the network.
+- **Positives.** `keep_positive(interactions, min_rating)` keeps ratings at or above the threshold (4.0 by default). Retrieval is trained on "liked" interactions only.
+- **Temporal split, no leakage.** `TemporalSplitter` sorts by timestamp and cuts at the global `1 - validation - test` and `1 - test` quantiles, so every training interaction happens strictly before every validation interaction, and every validation interaction strictly before every test one. Validation and test rows whose user or item never appears in training are dropped and counted, because ID-embedding towers cannot represent them.
+- **Encoding.** `IdEncoder` is fitted on the training split only and maps raw ids to contiguous indices `0..n-1`. `build_genre_matrix` turns item genres into a multi-hot matrix aligned with those indices.
+
+#### Model
+
+```mermaid
+classDiagram
+    class TowerConfig {
+        +embedding_dim: int
+        +hidden_dims: tuple~int~
+        +output_dim: int
+        +dropout: float
+    }
+    class UserTower {
+        +UserTower(num_users, config)
+        +forward(user_indices) Tensor
+    }
+    class ItemTower {
+        +ItemTower(genre_matrix, config)
+        +forward(item_indices) Tensor
+    }
+    class TwoTowerModel {
+        +forward(user_indices, item_indices) tuple
+        +encode_users(user_indices) Tensor
+        +encode_all_items() Tensor
+    }
     class LossFunction {
         <<protocol>>
-        +__call__(user_vectors, item_vectors, item_ids) Tensor
+        +__call__(user_vectors, item_vectors, item_indices) Tensor
     }
     class InBatchSoftmaxLoss {
         +temperature: float
     }
     class LogQCorrectedLoss {
-        -frequency_estimator: ItemFrequencyEstimator
+        +temperature: float
+        -estimator: ItemFrequencyEstimator
     }
     class ItemFrequencyEstimator {
-        +update(item_ids)
-        +log_probability(item_ids) Tensor
+        +ItemFrequencyEstimator(num_items, learning_rate)
+        +observe(item_indices) Tensor
+        +probabilities() Tensor
     }
-    class Trainer {
-        +fit(train, validation) TrainingReport
-    }
-    DatasetLoader <|.. MovieLensLoader
-    DatasetLoader <|.. AmazonReviewsLoader
+    TwoTowerModel *-- UserTower
+    TwoTowerModel *-- ItemTower
     LossFunction <|.. InBatchSoftmaxLoss
     LossFunction <|.. LogQCorrectedLoss
     LogQCorrectedLoss --> ItemFrequencyEstimator
-    Trainer --> UserTower
-    Trainer --> ItemTower
-    Trainer --> LossFunction
 ```
 
-- **logQ correction** (Yi et al., RecSys 2019). With in-batch negatives, popular items appear as negatives far more often than uniform sampling would produce. Subtracting `log Q(item)` from each logit before the softmax corrects for that sampling distribution. `ItemFrequencyEstimator` maintains `Q` with the streaming estimate from the paper, so it never needs a full pass over the data.
-- Both towers L2-normalize their output, so inner product equals cosine similarity and the index uses `InnerProductMetric`.
+- **Towers.** `UserTower` is an ID embedding followed by an MLP. `ItemTower` concatenates an ID embedding with the mean of the item's genre embeddings, then applies an MLP. Genre features let rarely seen items share signal with popular items of the same genre. Both towers L2-normalize their output, so inner product equals cosine similarity and the index will use `InnerProductMetric`.
+- **In-batch softmax.** For a batch of `B` (user, item) positives, the logits are `S = U Vᵀ / τ`. Row `i` is a `B`-way classification whose correct class is column `i`. Where the same item appears twice in a batch, the duplicate column is masked to `-inf` in the other row, so a positive is never treated as its own negative.
+- **logQ correction** (Yi et al., RecSys 2019). In-batch negatives are sampled in proportion to item popularity, so popular items are pushed down far more often than uniform sampling would push them. The corrected logit is `s(i, j) - log q_j`, applied to every column (positive and negatives alike), where `q_j` is the probability that item `j` appears in a batch.
+- **Streaming frequency estimate** (Yi et al., Algorithm 2). Per item, `ItemFrequencyEstimator` keeps the step at which it was last seen (`A`) and a moving average of the gap between sightings (`B`). On every training step `t`, for each item `j` in the batch: `B[j] ← (1 - α) B[j] + α (t - A[j])`, then `A[j] ← t`. The estimate is `q_j = 1 / B[j]`. Items are already encoded to contiguous indices, so the paper's hash function is the identity. `observe` updates the state and returns `log q` for the batch in one call, so the loss cannot use a stale estimate.
+- **Hypothesis to test, not to assume.** Removing the popularity penalty should raise overall recall. It is also likely to shift recommendations *towards* popular items, so tail recall may fall rather than rise. The ablation reports head and tail recall separately to show which way it goes.
+
+#### Training
+
+```mermaid
+classDiagram
+    class TrainerConfig {
+        +epochs: int
+        +batch_size: int
+        +learning_rate: float
+        +weight_decay: float
+        +seed: int
+    }
+    class InteractionBatcher {
+        +InteractionBatcher(user_indices, item_indices, batch_size, seed)
+        +__iter__() Iterator~Batch~
+        +__len__() int
+    }
+    class Trainer {
+        +Trainer(model, loss, optimizer, config)
+        +fit(batcher) TrainingHistory
+    }
+    class TrainingHistory {
+        +epoch_losses: list~float~
+    }
+    Trainer --> TwoTowerModel
+    Trainer --> LossFunction
+    Trainer --> InteractionBatcher
+    Trainer ..> TrainingHistory : returns
+```
+
+- The model, loss and optimizer are created by the caller and injected, so the ablation swaps only the loss.
+- `InteractionBatcher` reshuffles every epoch from its own seeded generator and drops the final partial batch. That keeps the batch size, and with it the meaning of `q_j`, constant across steps.
+
+#### Evaluation
+
+```mermaid
+classDiagram
+    class ExactRetriever {
+        +ExactRetriever(item_vectors)
+        +top_k(query_vectors, k, excluded) ndarray
+    }
+    class PopularitySegmenter {
+        +PopularitySegmenter(train_item_counts, head_fraction)
+        +is_head(item_indices) ndarray
+    }
+    class RetrievalEvaluator {
+        +RetrievalEvaluator(retriever, segmenter, ks)
+        +evaluate(user_vectors, relevant, excluded) RetrievalReport
+    }
+    class RetrievalReport {
+        +recall: dict
+        +head_recall: dict
+        +tail_recall: dict
+    }
+    RetrievalEvaluator --> ExactRetriever
+    RetrievalEvaluator --> PopularitySegmenter
+    RetrievalEvaluator ..> RetrievalReport : returns
+```
+
+- **Exact search.** `ExactRetriever` scores every item by inner product in chunks of users and masks the items each user already interacted with in training. This is the ground truth that the HNSW index is later measured against.
+- **Recall definition.** `recall@k` is the fraction of held-out positive interactions whose item appears in that user's top-k: the total number of hits divided by the total number of held-out positives. Head and tail recall use the same formula restricted to held-out interactions on head or tail items.
+- **Head and tail.** `PopularitySegmenter` ranks items by training interaction count. The top `head_fraction` of items (20% by default) are the head and the rest are the tail.
 
 ### 10.2 Index, evaluation and pipeline (Planned, Phases 2 and 5)
 
@@ -606,3 +750,7 @@ classDiagram
 | 5 | 2026-10-17 | Package version read from `CMakeLists.txt` | One source of truth for the C++ library and the Python distribution |
 | 6 | 2026-10-17 | 32-bit `NodeId` | Halves neighbor-list memory; v0.1 targets at most tens of millions of items |
 | 7 | 2026-10-17 | Smaller-is-closer for every metric | Search code never branches on metric type |
+| 8 | 2026-10-17 | PyTorch, Polars and PyYAML in a `train` extra, not core dependencies | Index users should not download PyTorch. Torch-dependent tests are skipped when the extra is absent (wheel smoke tests, Docker `dev` image) |
+| 9 | 2026-10-17 | PyTorch from the CPU wheel index on Linux | The default Linux wheels bundle CUDA (several GB). The CPU build is enough for MovieLens-scale training and keeps CI fast |
+| 10 | 2026-10-17 | Global temporal split rather than leave-last-out per user | Leave-last-out lets training see interactions from other users that happen after a test interaction. A global cut leaks nothing |
+| 11 | 2026-10-17 | Interaction-level (micro) recall | Head and tail segments are empty for many users, so per-user averages would be dominated by users with one or two segment items |
