@@ -24,7 +24,7 @@ jobs:
             - uses: astral-sh/setup-uv@v10.3.0
               with:
                   enable-cache: true
-            - run: uv sync --locked --only-group lint
+            - run: uv sync --locked --no-install-project --no-default-groups --group lint --all-extras
             - run: uv run --no-sync pre-commit run --all-files --show-diff-on-failure
 
     clang-tidy:

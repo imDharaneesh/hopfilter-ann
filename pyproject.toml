@@ -23,7 +23,11 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Typing :: Typed",
 ]
-dependencies = []
+dependencies = ["numpy>=2.1", "pyyaml>=6.0"]
+
+[project.optional-dependencies]
+train = ["torch>=2.9", "polars>=1.30"]
+plot = ["matplotlib>=3.10"]
 
 [project.urls]
 Homepage = "https://github.com/imDharaneesh/hopfilter-ann"
@@ -40,9 +44,11 @@ lint = [
     "clang-format==18.1.8",
     "pre-commit>=4.0",
     "clang-tidy==18.1.8",
+    "types-pyyaml>=6.0",
 ]
 docs = ["mkdocs>=1.6,<2", "mkdocs-material>=9.6"]
 dev = [
+    "hopfilter-ann[train,plot]",
     { include-group = "test" },
     { include-group = "lint" },
     { include-group = "docs" },
@@ -57,6 +63,14 @@ cache-keys = [
     { file = "core/**/*" },
     { file = "bindings/**/*" },
 ]
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [tool.scikit-build]
 minimum-version = "build-system.requires"
