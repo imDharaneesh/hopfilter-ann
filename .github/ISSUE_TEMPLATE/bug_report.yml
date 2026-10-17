@@ -1,0 +1,38 @@
+name: Bug report
+description: Something is wrong, crashes, or returns incorrect results.
+labels: [bug]
+body:
+    - type: textarea
+      id: summary
+      attributes:
+          label: What happened
+          description: What you did, what you expected, and what you got instead.
+      validations:
+          required: true
+    - type: textarea
+      id: reproduction
+      attributes:
+          label: Minimal reproduction
+          description: Smallest script or command that shows the problem. Synthetic data is ideal.
+          render: python
+      validations:
+          required: true
+    - type: input
+      id: version
+      attributes:
+          label: hopfilter version
+          description: Output of `hopfilter --version`.
+      validations:
+          required: true
+    - type: input
+      id: environment
+      attributes:
+          label: Environment
+          description: OS, CPU model, Python version, compiler if built from source.
+      validations:
+          required: true
+    - type: textarea
+      id: logs
+      attributes:
+          label: Logs or traceback
+          render: text

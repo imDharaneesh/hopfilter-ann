@@ -1,0 +1,26 @@
+name: Benchmark result or regression
+description: Report a performance number that differs from the published results.
+labels: [performance]
+body:
+    - type: input
+      id: config
+      attributes:
+          label: Benchmark config
+          description: Path of the config under benchmarks/configs that you ran.
+      validations:
+          required: true
+    - type: textarea
+      id: hardware
+      attributes:
+          label: Hardware
+          description: CPU model, core count, memory, OS, and thread count used.
+      validations:
+          required: true
+    - type: textarea
+      id: results
+      attributes:
+          label: Measured versus expected
+          description: Paste the results table produced by the runner.
+          render: text
+      validations:
+          required: true

@@ -1,0 +1,23 @@
+name: Feature request
+description: Propose a new capability, metric, search strategy, or dataset.
+labels: [enhancement]
+body:
+    - type: textarea
+      id: problem
+      attributes:
+          label: Problem
+          description: What are you trying to do that hopfilter does not support today?
+      validations:
+          required: true
+    - type: textarea
+      id: proposal
+      attributes:
+          label: Proposed solution
+          description: Which interface would it extend (DistanceMetric, SearchStrategy, DatasetLoader, ...)?
+      validations:
+          required: true
+    - type: textarea
+      id: evidence
+      attributes:
+          label: Evidence or references
+          description: Papers, benchmarks, or numbers that motivate the change.
