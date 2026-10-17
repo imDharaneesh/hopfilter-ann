@@ -73,6 +73,12 @@ provider = "scikit_build_core.metadata.regex"
 input = "CMakeLists.txt"
 regex = 'project\(hopfilter VERSION (?P<value>[0-9.]+)'
 
+[tool.cibuildwheel]
+build = ["cp313-*", "cp314-*"]
+skip = ["*-musllinux_*", "*-win32", "*_i686"]
+test-groups = ["test"]
+test-command = 'pytest {project}/tests/python -m "not slow" -p no:cacheprovider'
+
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["tests/python"]
