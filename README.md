@@ -7,7 +7,7 @@
 
 **Two-tower retrieval with a from-scratch HNSW index and filter-aware search.**
 
-> **Status: pre-alpha, Phase 0 of 6.** The build, test and release infrastructure is in place. The index and model are not implemented yet. See the [roadmap](PLAN.md#6-phases).
+> **Status: pre-alpha, Phase 1 of 6 done.** The two-tower model, logQ loss and exact evaluation work on MovieLens ([results](docs/benchmarks.md#logq-ablation-phase-1)). The HNSW index is not implemented yet. See the [roadmap](PLAN.md#6-phases).
 
 ## What it is
 
@@ -54,8 +54,8 @@ pip install hopfilter-ann
 | Phase | Scope | Status |
 |---|---|---|
 | 0 | Foundation: build, packaging, CI, docs | Done |
-| 1 | Two-tower baseline on MovieLens, logQ ablation | Next |
-| 2 | HNSW core, about 0.95 recall@10 on SIFT1M | Planned |
+| 1 | Two-tower baseline on MovieLens, logQ ablation | Done: logQ recall@50 0.109 vs 0.039 without |
+| 2 | HNSW core, about 0.95 recall@10 on SIFT1M | Next |
 | 3 | SIMD kernels, memory layout, parallel build | Planned |
 | 4 | Filtered search: post, pre, in-graph, adaptive | Planned |
 | 5 | Pipeline, CLI, reproducible benchmarks vs FAISS and hnswlib | Planned |

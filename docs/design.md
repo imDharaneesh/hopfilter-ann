@@ -24,7 +24,7 @@ This document describes the architecture of hopfilter: its modules, their interf
 
 ## 2. System overview
 
-**Implemented:** build skeleton only. **Planned:** everything else.
+**Implemented:** build skeleton (Phase 0); data, model, training and exact evaluation (Phase 1). **Planned:** index, filtered search, pipeline.
 
 ```mermaid
 flowchart LR
@@ -613,7 +613,7 @@ classDiagram
 - **In-batch softmax.** For a batch of `B` (user, item) positives, the logits are `S = U Vᵀ / τ`. Row `i` is a `B`-way classification whose correct class is column `i`. Where the same item appears twice in a batch, the duplicate column is masked to `-inf` in the other row, so a positive is never treated as its own negative.
 - **logQ correction** (Yi et al., RecSys 2019). In-batch negatives are sampled in proportion to item popularity, so popular items are pushed down far more often than uniform sampling would push them. The corrected logit is `s(i, j) - log q_j`, applied to every column (positive and negatives alike), where `q_j` is the probability that item `j` appears in a batch.
 - **Streaming frequency estimate** (Yi et al., Algorithm 2). Per item, `ItemFrequencyEstimator` keeps the step at which it was last seen (`A`) and a moving average of the gap between sightings (`B`). On every training step `t`, for each item `j` in the batch: `B[j] ← (1 - α) B[j] + α (t - A[j])`, then `A[j] ← t`. The estimate is `q_j = 1 / B[j]`. Items are already encoded to contiguous indices, so the paper's hash function is the identity. `observe` updates the state and returns `log q` for the batch in one call, so the loss cannot use a stale estimate.
-- **Hypothesis to test, not to assume.** Removing the popularity penalty should raise overall recall. It is also likely to shift recommendations *towards* popular items, so tail recall may fall rather than rise. The ablation reports head and tail recall separately to show which way it goes.
+- **Hypothesis tested, not assumed.** The prediction was that removing the popularity penalty raises overall recall but shifts recommendations towards popular items, so tail recall could fall. The [MovieLens-1M ablation](benchmarks.md#logq-ablation-phase-1) confirmed both: logQ raised recall@50 from 0.039 to 0.109 while tail recall@50 fell from 0.049 to 0.033.
 
 #### Training
 

@@ -37,6 +37,18 @@ Check that it worked:
 uv run hopfilter --version
 ```
 
+## Datasets and the training extra
+
+The model, data and evaluation code needs the `train` extra (PyTorch, Polars); `uv sync` installs it through the `dev` group. Plain `pip install hopfilter-ann` does not, and the tests under `tests/python/{data,model,eval}` are skipped when it is missing. On Linux, PyTorch comes from the CPU wheel index, so no CUDA download is needed.
+
+Datasets are fetched, checksum-verified and extracted into `data/` (git-ignored):
+
+```bash
+uv run hopfilter download movielens-1m
+```
+
+Available names: `movielens-1m`, `movielens-25m`. Use `--data-dir` to put them elsewhere.
+
 ## Everyday commands
 
 | Task | Command |

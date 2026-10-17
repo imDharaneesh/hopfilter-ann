@@ -241,7 +241,8 @@ Each phase ends with a written summary of what was built and the measured result
 - Download script and loader for MovieLens (1M first, then 25M). Temporal split.
 - Towers, in-batch softmax loss, trainer, evaluation against exact search.
 - `LogQCorrectedLoss` with a frequency estimator. Ablation with and without logQ.
-- **Exit:** recall@k reported for both losses, logQ plot saved (gains expected on tail items), unit tests for loss math on hand-computed small cases.
+- **Exit:** recall@k reported for both losses, logQ plot saved, unit tests for loss math on hand-computed small cases.
+- **Outcome:** done. logQ raised test recall@50 from 0.039 to 0.109 on MovieLens-1M, but *lowered* tail recall (0.049 to 0.033), the opposite of this plan's original expectation of tail gains. Neither model beats the most-popular baseline (0.132) yet. Details in [`docs/benchmarks.md`](docs/benchmarks.md#logq-ablation-phase-1).
 
 ### Phase 2: HNSW core (weeks 2-3)
 
@@ -384,8 +385,8 @@ Summary; the full protocol is in [`docs/benchmarks.md`](docs/benchmarks.md).
 
 | Phase | Status |
 |---|---|
-| 0. Foundation | Done, awaiting CI run on GitHub |
-| 1. Two-tower baseline | Not started |
+| 0. Foundation | Done |
+| 1. Two-tower baseline | Done; follow-ups: early stopping, temperature sweep, MovieLens-25M run |
 | 2. HNSW core | Not started |
 | 3. Performance | Not started |
 | 4. Filtered search | Not started |
