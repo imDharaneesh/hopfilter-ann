@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cstddef>
 #include <span>
 
 #include <hopfilter/common/prefetch.hpp>
@@ -25,8 +26,14 @@ public:
         return metric_->distance(query, vectors_->at(id));
     }
 
-    /// Starts loading the vector of ``id`` into cache ahead of a distance computation.
-    void prefetch(NodeId id) const noexcept { prefetchForRead(vectors_->at(id).data()); }
+    /// Starts loading every cache line of the vector of ``id`` ahead of a distance computation.
+    void prefetch(NodeId id) const noexcept {
+        const auto vector = vectors_->at(id);
+        for (std::size_t offset = 0; offset < vector.size();
+             offset += VectorStore::kFloatsPerAlignment) {
+            prefetchForRead(vector.subspan(offset).data());
+        }
+    }
 
     /// Whether two stored vectors are bit-for-bit equal; stops at the first difference.
     [[nodiscard]] bool identical(NodeId lhs, NodeId rhs) const noexcept {
