@@ -13,6 +13,7 @@ FetchContent_MakeAvailable(googletest)
 include(GoogleTest)
 
 add_executable(hopfilter_core_tests
+    common/types_test.cpp
     common/version_test.cpp
 )
 
