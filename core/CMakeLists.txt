@@ -29,6 +29,7 @@ hopfilter_add_module(storage
 
 hopfilter_add_module(graph
     SOURCES
+        src/graph/hnsw_graph.cpp
         src/graph/layer_assigner.cpp
     DEPENDS
         hopfilter::common
