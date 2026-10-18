@@ -34,4 +34,4 @@ struct IndexConfig {
     }
 };
 
-}  // namespace hopfilter
+}

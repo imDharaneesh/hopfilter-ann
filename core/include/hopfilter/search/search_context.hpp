@@ -35,4 +35,4 @@ private:
     VisitedSet* visited_;
 };
 
-}  // namespace hopfilter
+}

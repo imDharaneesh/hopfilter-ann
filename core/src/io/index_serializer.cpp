@@ -143,7 +143,7 @@ std::unique_ptr<HnswIndex> parse(std::istream& source, const MetricRegistry& reg
         .build();
 }
 
-}  // namespace
+}
 
 void IndexSerializer::save(const HnswIndex& index, std::ostream& sink) {
     BinaryWriter writer{sink};
@@ -189,4 +189,4 @@ std::unique_ptr<HnswIndex> IndexSerializer::loadFromFile(const std::filesystem::
     return load(file, registry);
 }
 
-}  // namespace hopfilter
+}

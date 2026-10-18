@@ -138,5 +138,5 @@ TEST_F(GraphInvariantsTest, ConcurrentSearchesMatchSequentialResults) {
     }
 }
 
-}  // namespace
-}  // namespace hopfilter
+}
+}

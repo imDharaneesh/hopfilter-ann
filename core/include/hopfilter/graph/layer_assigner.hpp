@@ -40,4 +40,4 @@ private:
     double levelMultiplier_;
 };
 
-}  // namespace hopfilter
+}

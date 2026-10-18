@@ -22,4 +22,4 @@ public:
     using std::runtime_error::runtime_error;
 };
 
-}  // namespace hopfilter
+}

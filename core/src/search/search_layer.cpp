@@ -17,8 +17,6 @@ struct FartherFirst {
     }
 };
 
-/// One best-first traversal: a min-heap of candidates to expand and a max-heap of
-/// the ``ef`` best results so far.
 class LayerSearch {
 public:
     LayerSearch(const SearchContext& context, std::span<const float> query, std::size_t ef)
@@ -89,7 +87,7 @@ private:
     std::vector<Neighbor> results_;
 };
 
-}  // namespace
+}
 
 SearchResults searchLayer(const SearchContext& context,
                           std::span<const float> query,
@@ -115,4 +113,4 @@ Neighbor greedyDescend(const SearchContext& context,
     return closest;
 }
 
-}  // namespace hopfilter
+}

@@ -23,7 +23,7 @@ double multiplierFor(std::size_t maxNeighbors) {
     return 1.0 / std::log(static_cast<double>(maxNeighbors));
 }
 
-}  // namespace
+}
 
 ExponentialLayerAssigner::ExponentialLayerAssigner(std::size_t maxNeighbors, std::uint64_t seed)
     : generator_(seed), levelMultiplier_(multiplierFor(maxNeighbors)) {}
@@ -34,8 +34,7 @@ LevelIndex ExponentialLayerAssigner::nextLevel() {
 }
 
 double ExponentialLayerAssigner::nextOpenUnitInterval() noexcept {
-    // Shifting to (0, 1] keeps log() finite.
     return static_cast<double>((generator_() >> kDiscardedBits) + 1) * kMantissaScale;
 }
 
-}  // namespace hopfilter
+}

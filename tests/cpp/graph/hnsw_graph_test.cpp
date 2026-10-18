@@ -99,5 +99,5 @@ TEST(HnswGraphTest, RejectsInvalidShape) {
     EXPECT_THROW(HnswGraph(kInvalidNodeId, 4, 2), InvalidArgumentError);
 }
 
-}  // namespace
-}  // namespace hopfilter
+}
+}

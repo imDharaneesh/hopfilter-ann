@@ -61,5 +61,5 @@ TEST(KernelsTest, EmptyVectorsGiveZero) {
     EXPECT_FLOAT_EQ(dotProduct(empty, empty), 0.0F);
 }
 
-}  // namespace
-}  // namespace hopfilter
+}
+}

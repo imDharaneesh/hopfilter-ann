@@ -113,5 +113,5 @@ TEST(MetricRegistryTest, RejectsDuplicateAndEmptyRegistrations) {
     EXPECT_THROW(registry.registerMetric("empty", nullptr), InvalidArgumentError);
 }
 
-}  // namespace
-}  // namespace hopfilter
+}
+}

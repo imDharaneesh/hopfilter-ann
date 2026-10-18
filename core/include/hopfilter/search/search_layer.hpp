@@ -29,4 +29,4 @@ namespace hopfilter {
                                      LevelIndex topLevel,
                                      LevelIndex stopLevel);
 
-}  // namespace hopfilter
+}

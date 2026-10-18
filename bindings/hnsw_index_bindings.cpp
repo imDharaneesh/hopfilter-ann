@@ -105,7 +105,7 @@ py::tuple searchBatch(const HnswIndex& index,
     return py::make_tuple(std::move(ids), std::move(distances));
 }
 
-}  // namespace
+}
 
 void bindHnswIndex(py::module_& module) {
     py::class_<HnswIndex>(module, "HnswIndex")
@@ -144,4 +144,4 @@ void bindHnswIndex(py::module_& module) {
         });
 }
 
-}  // namespace hopfilter::bindings
+}

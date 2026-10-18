@@ -10,4 +10,4 @@ namespace hopfilter {
 /// Dot product. Both spans must have the same size.
 [[nodiscard]] float dotProduct(std::span<const float> lhs, std::span<const float> rhs) noexcept;
 
-}  // namespace hopfilter
+}

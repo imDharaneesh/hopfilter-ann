@@ -37,7 +37,7 @@ float* allocateZeroed(std::size_t floats) {
     return data;
 }
 
-}  // namespace
+}
 
 VectorStore::VectorStore(Dimension dimension, std::size_t capacity)
     : dimension_(dimension),
@@ -61,4 +61,4 @@ std::span<const float> VectorStore::at(NodeId id) const noexcept {
     return {data_.get() + (static_cast<std::size_t>(id) * stride_), dimension_};
 }
 
-}  // namespace hopfilter
+}

@@ -100,5 +100,5 @@ TEST(VisitedSetPoolTest, ManyThreadsCanAcquireAndRelease) {
     EXPECT_GE(pool.idleCount(), 1U);
 }
 
-}  // namespace
-}  // namespace hopfilter
+}
+}

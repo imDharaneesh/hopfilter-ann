@@ -81,7 +81,6 @@ def _require_files(dataset_dir: Path, names: tuple[str, str], dataset: str) -> t
 
 
 def _read_ml1m_ratings(path: Path) -> pl.DataFrame:
-    # Polars needs a single-byte separator, so split on ':' and keep every other column.
     raw = pl.read_csv(path, separator=":", has_header=False, quote_char=None)
     value_columns = raw.columns[:: len(ML1M_FIELD_SEPARATOR)]
     renamed = raw.select(value_columns).rename(

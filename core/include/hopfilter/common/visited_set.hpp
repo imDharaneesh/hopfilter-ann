@@ -74,4 +74,4 @@ private:
     std::vector<std::unique_ptr<VisitedSet>> idle_;
 };
 
-}  // namespace hopfilter
+}

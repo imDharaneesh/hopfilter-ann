@@ -32,5 +32,5 @@ TEST(ErrorsTest, DeriveFromMatchingStandardExceptions) {
     EXPECT_TRUE((std::is_base_of_v<std::runtime_error, SerializationError>));
 }
 
-}  // namespace
-}  // namespace hopfilter
+}
+}

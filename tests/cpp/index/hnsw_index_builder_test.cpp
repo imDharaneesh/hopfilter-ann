@@ -109,5 +109,5 @@ TEST(HnswIndexBuilderTest, RejectsHalfRestoredStorage) {
     EXPECT_THROW(static_cast<void>(builder.build()), InvalidArgumentError);
 }
 
-}  // namespace
-}  // namespace hopfilter
+}
+}

@@ -24,4 +24,4 @@ SearchResults UnfilteredStrategy::search(const SearchContext& context,
     return results;
 }
 
-}  // namespace hopfilter
+}

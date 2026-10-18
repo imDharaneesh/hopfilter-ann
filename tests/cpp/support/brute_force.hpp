@@ -16,7 +16,6 @@
 
 namespace hopfilter::testing {
 
-/// Exact top-k ids of ``query`` over ``data`` under ``metric``, closest first.
 inline std::vector<NodeId> bruteForceTopK(const std::vector<std::vector<float>>& data,
                                           std::span<const float> query,
                                           std::size_t k,
@@ -39,7 +38,6 @@ inline std::vector<NodeId> bruteForceTopK(const std::vector<std::vector<float>>&
     return ids;
 }
 
-/// Fraction of ``truth`` present in ``found``.
 inline double recall(const SearchResults& found, const std::vector<NodeId>& truth) {
     std::unordered_set<NodeId> foundIds;
     for (const auto& neighbor : found) {
@@ -50,8 +48,6 @@ inline double recall(const SearchResults& found, const std::vector<NodeId>& trut
     return truth.empty() ? 1.0 : static_cast<double>(hits) / static_cast<double>(truth.size());
 }
 
-/// Builds an index over ``data`` with default collaborators; capacity and dimension
-/// are taken from ``data``.
 inline std::unique_ptr<HnswIndex> buildIndex(const std::vector<std::vector<float>>& data,
                                              IndexConfig config) {
     config.dimension = data.front().size();
@@ -63,4 +59,4 @@ inline std::unique_ptr<HnswIndex> buildIndex(const std::vector<std::vector<float
     return index;
 }
 
-}  // namespace hopfilter::testing
+}

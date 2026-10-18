@@ -24,7 +24,7 @@ void validateShape(std::size_t capacity, std::size_t levelZero, std::size_t uppe
     }
 }
 
-}  // namespace
+}
 
 template <typename Self>
 auto HnswGraph::slotOf(Self& graph, NodeId id, LevelIndex level) noexcept {
@@ -86,4 +86,4 @@ std::size_t HnswGraph::maxNeighbors(LevelIndex level) const noexcept {
     return level == 0 ? maxNeighborsLevelZero_ : maxNeighborsUpper_;
 }
 
-}  // namespace hopfilter
+}

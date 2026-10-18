@@ -61,4 +61,4 @@ private:
     LevelIndex maxLevel_ = 0;
 };
 
-}  // namespace hopfilter
+}

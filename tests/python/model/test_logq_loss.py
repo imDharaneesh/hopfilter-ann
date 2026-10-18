@@ -19,7 +19,6 @@ def test_matches_hand_computed_corrected_loss() -> None:
 
     loss = loss_function(IDENTITY_2D, IDENTITY_2D, DISTINCT_ITEMS)
 
-    # Item 0 was seen at steps 1 and 2 (q = 1); item 1 only at step 2 (gap 2, q = 1/2).
     row_zero = -1.0 + math.log(math.e + 2.0)
     row_one = -(1.0 + math.log(2.0)) + math.log(1.0 + 2.0 * math.e)
     assert float(loss.item()) == pytest.approx((row_zero + row_one) / 2, rel=1e-6)

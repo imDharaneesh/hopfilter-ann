@@ -34,4 +34,4 @@ struct CloserFirst {
 /// Neighbors sorted closest first, without duplicate ids.
 using SearchResults = std::vector<Neighbor>;
 
-}  // namespace hopfilter
+}

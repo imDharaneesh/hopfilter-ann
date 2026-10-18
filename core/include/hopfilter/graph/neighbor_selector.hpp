@@ -51,4 +51,4 @@ private:
     bool keepPrunedConnections_;
 };
 
-}  // namespace hopfilter
+}

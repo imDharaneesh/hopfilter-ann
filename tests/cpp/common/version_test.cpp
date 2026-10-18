@@ -17,5 +17,5 @@ TEST(VersionTest, IsSemanticVersion) {
     EXPECT_TRUE(std::regex_match(std::string{version()}, semverPattern));
 }
 
-}  // namespace
-}  // namespace hopfilter
+}
+}

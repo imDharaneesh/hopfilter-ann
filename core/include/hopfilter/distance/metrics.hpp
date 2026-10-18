@@ -37,4 +37,4 @@ public:
     void prepare(std::span<float> vector) const noexcept override;
 };
 
-}  // namespace hopfilter
+}

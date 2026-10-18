@@ -153,5 +153,5 @@ TEST(HnswIndexTest, SameSeedAndOrderGiveIdenticalResults) {
     }
 }
 
-}  // namespace
-}  // namespace hopfilter
+}
+}

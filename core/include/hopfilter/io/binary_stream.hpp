@@ -13,7 +13,6 @@
 
 namespace hopfilter {
 
-// The on-disk format is little-endian; writing native bytes is only correct there.
 static_assert(std::endian::native == std::endian::little,
               "hopfilter serialization currently supports little-endian hosts only");
 
@@ -79,4 +78,4 @@ private:
     Crc32 crc_;
 };
 
-}  // namespace hopfilter
+}

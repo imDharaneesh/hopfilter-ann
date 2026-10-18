@@ -33,4 +33,4 @@ public:
                                        const SearchRequest& request) const override;
 };
 
-}  // namespace hopfilter
+}

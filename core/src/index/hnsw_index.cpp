@@ -110,4 +110,4 @@ void HnswIndex::connectBack(NodeId neighbor, NodeId newNode, LevelIndex level) {
     graph_->setNeighbors(neighbor, level, kept);
 }
 
-}  // namespace hopfilter
+}

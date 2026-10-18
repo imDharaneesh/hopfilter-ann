@@ -8,7 +8,7 @@
 
 namespace hopfilter {
 
-void DistanceMetric::prepare(std::span<float> /*vector*/) const noexcept {}
+void DistanceMetric::prepare([[maybe_unused]] std::span<float> vector) const noexcept {}
 
 float L2Metric::distance(std::span<const float> lhs, std::span<const float> rhs) const noexcept {
     return squaredL2(lhs, rhs);
@@ -46,4 +46,4 @@ void CosineMetric::prepare(std::span<float> vector) const noexcept {
     }
 }
 
-}  // namespace hopfilter
+}

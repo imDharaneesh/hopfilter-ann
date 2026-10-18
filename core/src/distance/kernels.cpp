@@ -8,7 +8,6 @@
 namespace hopfilter {
 namespace {
 
-// Independent partial sums let the CPU overlap additions without relaxing FP semantics.
 constexpr std::size_t kAccumulators = 4;
 
 template <typename PairTerm>
@@ -27,7 +26,7 @@ float blockedSum(std::span<const float> lhs, std::span<const float> rhs, PairTer
     return total;
 }
 
-}  // namespace
+}
 
 float squaredL2(std::span<const float> lhs, std::span<const float> rhs) noexcept {
     return blockedSum(lhs, rhs, [](float left, float right) {
@@ -40,4 +39,4 @@ float dotProduct(std::span<const float> lhs, std::span<const float> rhs) noexcep
     return blockedSum(lhs, rhs, [](float left, float right) { return left * right; });
 }
 
-}  // namespace hopfilter
+}

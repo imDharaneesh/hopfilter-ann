@@ -7,7 +7,6 @@
 
 namespace hopfilter::testing {
 
-/// Pushes every not-yet-reached level-0 neighbor of ``node`` onto ``frontier``.
 inline void visitNeighbors(const HnswGraph& graph,
                            NodeId node,
                            std::vector<bool>& reached,
@@ -20,7 +19,6 @@ inline void visitNeighbors(const HnswGraph& graph,
     }
 }
 
-/// Which nodes a traversal from the entry point can reach by following level-0 edges.
 inline std::vector<bool> reachableOnLevelZero(const HnswGraph& graph) {
     std::vector<bool> reached(graph.size(), false);
     if (!graph.entryPoint()) {
@@ -36,4 +34,4 @@ inline std::vector<bool> reachableOnLevelZero(const HnswGraph& graph) {
     return reached;
 }
 
-}  // namespace hopfilter::testing
+}

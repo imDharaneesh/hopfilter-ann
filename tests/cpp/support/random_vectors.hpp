@@ -7,7 +7,6 @@
 
 namespace hopfilter::testing {
 
-/// Uniform floats in [-1, 1) from raw generator bits, identical on every standard library.
 class RandomVectors {
 public:
     explicit RandomVectors(std::uint64_t seed) : generator_(seed) {}
@@ -42,4 +41,4 @@ private:
     std::mt19937_64 generator_;
 };
 
-}  // namespace hopfilter::testing
+}

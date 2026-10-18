@@ -1,5 +1,7 @@
+#include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <ios>
 #include <span>
 #include <string>
@@ -8,20 +10,6 @@
 #include <hopfilter/io/binary_stream.hpp>
 
 namespace hopfilter {
-namespace {
-
-// char and std::byte may alias any object, which is exactly what stream I/O needs.
-const char* asChars(const std::byte* bytes) noexcept {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    return reinterpret_cast<const char*>(bytes);
-}
-
-char* asChars(std::byte* bytes) noexcept {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    return reinterpret_cast<char*>(bytes);
-}
-
-}  // namespace
 
 void BinaryWriter::writeString(const std::string& text) {
     write(static_cast<std::uint32_t>(text.size()));
@@ -29,7 +17,9 @@ void BinaryWriter::writeString(const std::string& text) {
 }
 
 void BinaryWriter::writeBytes(std::span<const std::byte> bytes) {
-    sink_->write(asChars(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    std::string buffer(bytes.size(), '\0');
+    std::memcpy(buffer.data(), bytes.data(), bytes.size());
+    sink_->write(buffer.data(), static_cast<std::streamsize>(buffer.size()));
     if (!*sink_) {
         throw SerializationError("failed to write index data");
     }
@@ -49,22 +39,26 @@ std::string BinaryReader::readString(std::size_t maxLength) {
 
 void BinaryReader::verifyChecksum() {
     const std::uint32_t expected = crc_.value();
-    std::uint32_t stored = 0;
-    source_->read(asChars(std::as_writable_bytes(std::span{&stored, 1}).data()), sizeof(stored));
-    if (source_->gcount() != sizeof(stored)) {
+    std::array<char, sizeof(std::uint32_t)> buffer{};
+    source_->read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+    if (source_->gcount() != static_cast<std::streamsize>(buffer.size())) {
         throw SerializationError("index data is truncated (missing checksum)");
     }
+    std::uint32_t stored = 0;
+    std::memcpy(&stored, buffer.data(), buffer.size());
     if (stored != expected) {
         throw SerializationError("index checksum mismatch; the data is corrupted");
     }
 }
 
 void BinaryReader::readBytes(std::span<std::byte> bytes) {
-    source_->read(asChars(bytes.data()), static_cast<std::streamsize>(bytes.size()));
-    if (source_->gcount() != static_cast<std::streamsize>(bytes.size())) {
+    std::string buffer(bytes.size(), '\0');
+    source_->read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+    if (source_->gcount() != static_cast<std::streamsize>(buffer.size())) {
         throw SerializationError("index data is truncated");
     }
+    std::memcpy(bytes.data(), buffer.data(), buffer.size());
     crc_.update(bytes);
 }
 
-}  // namespace hopfilter
+}

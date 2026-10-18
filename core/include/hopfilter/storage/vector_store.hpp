@@ -50,4 +50,4 @@ private:
     std::unique_ptr<float[], AlignedDeleter> data_;
 };
 
-}  // namespace hopfilter
+}

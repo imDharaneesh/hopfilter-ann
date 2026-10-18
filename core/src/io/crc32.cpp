@@ -27,7 +27,7 @@ constexpr std::array<std::uint32_t, kTableSize> makeTable() {
 
 constexpr auto kTable = makeTable();
 
-}  // namespace
+}
 
 void Crc32::update(std::span<const std::byte> bytes) noexcept {
     for (const std::byte byte : bytes) {
@@ -36,4 +36,4 @@ void Crc32::update(std::span<const std::byte> bytes) noexcept {
     }
 }
 
-}  // namespace hopfilter
+}

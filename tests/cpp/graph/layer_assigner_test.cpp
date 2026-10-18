@@ -58,5 +58,5 @@ TEST(ExponentialLayerAssignerTest, RejectsFewerThanTwoNeighbors) {
     EXPECT_THROW(ExponentialLayerAssigner(0, 0), InvalidArgumentError);
 }
 
-}  // namespace
-}  // namespace hopfilter
+}
+}

@@ -97,7 +97,6 @@ jobs:
         steps:
             - uses: actions/checkout@v7
             - run: sudo apt-get update && sudo apt-get install -y ninja-build
-            # Recent runner kernels use more ASLR entropy than TSan's shadow memory layout tolerates.
             - if: matrix.sanitizer == 'thread'
               run: sudo sysctl vm.mmap_rnd_bits=28
             - run: >

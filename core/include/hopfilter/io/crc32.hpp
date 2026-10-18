@@ -17,4 +17,4 @@ private:
     std::uint32_t state_ = 0xFFFFFFFFU;
 };
 
-}  // namespace hopfilter
+}

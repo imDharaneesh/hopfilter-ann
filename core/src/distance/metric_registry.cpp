@@ -24,7 +24,7 @@ std::string joined(const std::vector<std::string>& names) {
     return result;
 }
 
-}  // namespace
+}
 
 MetricRegistry MetricRegistry::withBuiltins() {
     MetricRegistry registry;
@@ -62,4 +62,4 @@ std::vector<std::string> MetricRegistry::names() const {
     return result;
 }
 
-}  // namespace hopfilter
+}

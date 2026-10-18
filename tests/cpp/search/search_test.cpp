@@ -26,8 +26,6 @@ bool isExpress(NodeId id) {
     return std::ranges::find(kExpressNodes, id) != kExpressNodes.end();
 }
 
-// Points 0..9 on a line. Level 0 links each point to its neighbors; level 1 is an
-// express lane through 0, 5 and 9.
 class LineGraphTest : public ::testing::Test {
 protected:
     LineGraphTest()
@@ -158,5 +156,5 @@ TEST(UnfilteredStrategyTest, EmptyGraphReturnsNothing) {
     EXPECT_TRUE(UnfilteredStrategy{}.search(context, query, 5, SearchRequest{}).empty());
 }
 
-}  // namespace
-}  // namespace hopfilter
+}
+}

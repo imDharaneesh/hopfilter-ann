@@ -36,4 +36,4 @@ public:
         const MetricRegistry& registry = MetricRegistry::withBuiltins());
 };
 
-}  // namespace hopfilter
+}

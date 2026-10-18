@@ -32,4 +32,4 @@ public:
     [[nodiscard]] virtual Dimension dimension() const noexcept = 0;
 };
 
-}  // namespace hopfilter
+}

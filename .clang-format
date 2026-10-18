@@ -9,7 +9,7 @@ ColumnLimit: 100
 AccessModifierOffset: -4
 IndentCaseLabels: true
 NamespaceIndentation: None
-FixNamespaceComments: true
+FixNamespaceComments: false
 PointerAlignment: Left
 ReferenceAlignment: Left
 DerivePointerAlignment: false

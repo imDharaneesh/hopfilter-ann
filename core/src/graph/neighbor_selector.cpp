@@ -18,10 +18,6 @@ struct Judgement {
     std::size_t duplicateOf;
 };
 
-// Ties keep the candidate. An exact copy of a selected neighbor adds no direction, so it
-// takes that neighbor's slot instead of a new one (newest copy wins, which chains copies
-// together); otherwise a cluster of duplicates fills every slot with copies and traps any
-// search that enters it.
 Judgement judge(const Neighbor& candidate,
                 const std::vector<NodeId>& selected,
                 const NodeDistances& distances) {
@@ -36,11 +32,12 @@ Judgement judge(const Neighbor& candidate,
     return {Verdict::Keep, selected.size()};
 }
 
-}  // namespace
+}
 
-std::vector<NodeId> SimpleNeighborSelector::select(std::span<const Neighbor> candidates,
-                                                   std::size_t maxNeighbors,
-                                                   const NodeDistances& /*distances*/) const {
+std::vector<NodeId> SimpleNeighborSelector::select(
+    std::span<const Neighbor> candidates,
+    std::size_t maxNeighbors,
+    [[maybe_unused]] const NodeDistances& distances) const {
     const std::size_t count = std::min(maxNeighbors, candidates.size());
     std::vector<NodeId> selected;
     selected.reserve(count);
@@ -75,4 +72,4 @@ std::vector<NodeId> HeuristicNeighborSelector::select(std::span<const Neighbor> 
     return selected;
 }
 
-}  // namespace hopfilter
+}

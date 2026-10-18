@@ -72,5 +72,5 @@ TEST(VectorStoreTest, RejectsInvalidShape) {
     EXPECT_THROW(VectorStore(10, kInvalidNodeId), InvalidArgumentError);
 }
 
-}  // namespace
-}  // namespace hopfilter
+}
+}

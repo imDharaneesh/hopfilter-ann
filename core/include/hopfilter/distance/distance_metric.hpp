@@ -24,4 +24,4 @@ public:
     virtual void prepare(std::span<float> vector) const noexcept;
 };
 
-}  // namespace hopfilter
+}

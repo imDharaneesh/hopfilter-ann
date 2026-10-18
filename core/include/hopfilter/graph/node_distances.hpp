@@ -34,4 +34,4 @@ private:
     const VectorStore* vectors_;
 };
 
-}  // namespace hopfilter
+}

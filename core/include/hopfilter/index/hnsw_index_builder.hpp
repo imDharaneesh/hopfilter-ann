@@ -54,4 +54,4 @@ private:
     std::unique_ptr<HnswGraph> graph_;
 };
 
-}  // namespace hopfilter
+}

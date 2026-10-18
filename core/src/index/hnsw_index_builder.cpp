@@ -32,7 +32,7 @@ void validateConfig(const IndexConfig& config) {
             "efConstruction must be at least maxNeighbors");
 }
 
-}  // namespace
+}
 
 HnswIndexBuilder& HnswIndexBuilder::withConfig(IndexConfig config) {
     config_ = std::move(config);
@@ -140,4 +140,4 @@ void HnswIndexBuilder::validateStorage(const IndexConfig& config) const {
             "restored graph has the wrong degree bounds");
 }
 
-}  // namespace hopfilter
+}

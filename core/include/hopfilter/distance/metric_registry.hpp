@@ -32,4 +32,4 @@ private:
     std::map<std::string, Factory, std::less<>> factories_;
 };
 
-}  // namespace hopfilter
+}

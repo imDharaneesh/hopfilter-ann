@@ -15,7 +15,7 @@ namespace {
 constexpr std::uint32_t kNeverVisited = 0;
 constexpr std::uint32_t kFirstEpoch = 1;
 
-}  // namespace
+}
 
 VisitedSet::VisitedSet(std::size_t capacity) : VisitedSet(capacity, kFirstEpoch) {}
 
@@ -53,7 +53,6 @@ VisitedSetPool::Lease::~Lease() {
     try {
         pool_->release(std::move(set_));
     } catch (const std::exception&) {
-        // Losing a pooled set only costs one allocation on a later acquire.
         set_ = nullptr;
     }
 }
@@ -87,4 +86,4 @@ void VisitedSetPool::release(std::unique_ptr<VisitedSet> set) {
     idle_.push_back(std::move(set));
 }
 
-}  // namespace hopfilter
+}

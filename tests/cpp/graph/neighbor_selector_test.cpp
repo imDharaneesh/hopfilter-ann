@@ -11,7 +11,6 @@
 namespace hopfilter {
 namespace {
 
-// Base at the origin; A and B point the same way (B just behind A), C points elsewhere.
 constexpr NodeId kBase = 0;
 constexpr NodeId kA = 1;
 constexpr NodeId kB = 2;
@@ -98,5 +97,5 @@ TEST_F(NeighborSelectorTest, SelectorsHandleEmptyCandidates) {
     EXPECT_TRUE(HeuristicNeighborSelector{true}.select(none, 4, distances()).empty());
 }
 
-}  // namespace
-}  // namespace hopfilter
+}
+}

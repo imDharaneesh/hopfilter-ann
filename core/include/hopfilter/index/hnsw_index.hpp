@@ -77,4 +77,4 @@ private:
     std::mutex insertMutex_;
 };
 
-}  // namespace hopfilter
+}

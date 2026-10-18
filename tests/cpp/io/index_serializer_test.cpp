@@ -185,8 +185,6 @@ std::filesystem::path fixturePath() {
     return std::filesystem::path{HOPFILTER_FIXTURE_DIR} / "index_format_v1.hopf";
 }
 
-// Run explicitly to regenerate the fixture:
-//   hopfilter_core_tests --gtest_also_run_disabled_tests --gtest_filter=*WriteVersionOneFixture
 TEST(IndexFormatRegressionTest, DISABLED_WriteVersionOneFixture) {
     IndexSerializer::saveToFile(*fixtureIndex(), fixturePath());
 }
@@ -200,5 +198,5 @@ TEST(IndexFormatRegressionTest, VersionOneFixtureStillLoads) {
     expectSameGraph(expected->graph(), loaded->graph());
 }
 
-}  // namespace
-}  // namespace hopfilter
+}
+}

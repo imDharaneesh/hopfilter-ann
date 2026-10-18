@@ -28,10 +28,10 @@ void translate(std::exception_ptr pending) {
     }
 }
 
-}  // namespace
+}
 
 void registerErrorTranslation() {
     pybind11::register_exception_translator(&translate);
 }
 
-}  // namespace hopfilter::bindings
+}
