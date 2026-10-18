@@ -1,7 +1,7 @@
 # Benchmarks
 
 !!! note "Status"
-    The [logQ ablation](#logq-ablation-phase-1) has results. The ANN and filtered-search tables are still templates and are filled in from Phase 2 onward, each with the exact command and commit that produced it. A number without a reproducible command is not published.
+    The [logQ ablation](#logq-ablation-phase-1) and the [scalar HNSW core on SIFT1M](#raw-ann-scalar-core-phase-2) have results. The library comparison and filtered-search tables are still templates, filled in from Phase 3 onward, each with the exact command and commit that produced it. A number without a reproducible command is not published.
 
 ## Principles
 
@@ -126,7 +126,44 @@ uv run python benchmarks/plots/plot_logq_ablation.py --results benchmarks/result
 
 Raw per-run results, including per-epoch losses and validation curves, are in `benchmarks/results/logq_ablation_ml1m.json`.
 
-### Raw ANN (Phase 2-3)
+### Raw ANN: scalar core (Phase 2)
+
+The first measurement of the from-scratch HNSW core: scalar distance kernels, single-threaded build and search, no comparison libraries yet. This row is the baseline that Phase 3's SIMD kernels, memory layout and parallel build are measured against.
+
+**Setup:** SIFT1M (1,000,000 x 128, L2; 10,000 queries with ground truth from ANN-Benchmarks), M = 16, efConstruction = 200, seed 42. AMD Ryzen (Family 25 Model 68), 16 logical CPUs, 15.8 GiB RAM, Windows 11, MSVC Release build, Python 3.14.3, commit `61219e3`. Idle machine, one thread.
+
+| Metric | Value |
+|---|---|
+| Build time | 1,309 s (about 760 inserts/s) |
+| Saved index size | 577 MiB (vectors 488 MiB + graph) |
+| Process RSS after build | 1.2 GiB (includes the 0.5 GiB dataset arrays held by the runner) |
+
+| efSearch | recall@10 | QPS (1 thread) | p50 (ms) | p99 (ms) |
+|---|---|---|---|---|
+| 10 | 0.710 | 5,382 | 0.195 | 0.361 |
+| 16 | 0.802 | 4,519 | 0.215 | 0.481 |
+| 24 | 0.866 | 3,743 | 0.269 | 0.526 |
+| 32 | 0.904 | 3,065 | 0.333 | 0.611 |
+| 48 | 0.944 | 2,275 | 0.456 | 0.842 |
+| **64** | **0.964** | **1,767** | **0.638** | **1.021** |
+| 96 | 0.982 | 1,302 | 0.787 | 1.263 |
+| 128 | 0.990 | 1,052 | 1.007 | 1.570 |
+| 192 | 0.995 | 737 | 1.390 | 2.230 |
+| 256 | 0.997 | 585 | 1.854 | 2.886 |
+| 384 | 0.999 | 410 | 2.515 | 3.646 |
+| 512 | 0.999 | 330 | 3.227 | 5.005 |
+
+The Phase 2 target of about 0.95 recall@10 is reached at efSearch 48-64. QPS is from one batch call over all 10,000 queries; p50 and p99 come from 1,000 individual calls and include Python call overhead.
+
+An earlier run at the same commit was discarded. It overlapped with compiler and clang-tidy jobs, inflating build time to 1,900 s, and its efSearch-512 batch stalled, reporting 1 QPS against a 4 ms median latency. Recall was identical in both runs, as expected from a deterministic build.
+
+**Reproduce**
+
+``bash
+uv run python benchmarks/runners/ann_recall.py --config benchmarks/configs/sift1m.yaml
+``
+
+### Raw ANN: comparison (Phase 3)
 
 | Dataset | Library | Params | recall@10 | QPS (1 thread) | QPS (all) | p99 (ms) | Build (s) | Memory (MB) |
 |---|---|---|---|---|---|---|---|---|
