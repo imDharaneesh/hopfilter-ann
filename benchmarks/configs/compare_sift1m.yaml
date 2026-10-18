@@ -1,0 +1,11 @@
+dataset: sift-128-euclidean
+data_dir: data
+libraries: [hopfilter, hopfilter_scalar, hnswlib, faiss]
+max_neighbors: 16
+ef_construction: 200
+seed: 42
+k: 10
+ef_search: [16, 24, 32, 48, 64, 96, 128, 192, 256]
+repeats: 3
+threads: 0
+results_path: benchmarks/results/compare_sift1m.json

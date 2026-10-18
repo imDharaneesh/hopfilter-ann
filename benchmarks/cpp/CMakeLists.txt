@@ -1,0 +1,3 @@
+add_executable(hopfilter_search_bench search_bench.cpp)
+target_link_libraries(hopfilter_search_bench PRIVATE hopfilter::core)
+hopfilter_set_warnings(hopfilter_search_bench)

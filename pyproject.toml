@@ -49,6 +49,7 @@ lint = [
     "types-psutil>=7.0",
 ]
 docs = ["mkdocs>=1.6,<2", "mkdocs-material>=9.6"]
+compare = ["faiss-cpu>=1.15", "hnswlib>=0.8"]
 dev = [
     "hopfilter-ann[train,plot,bench]",
     { include-group = "test" },
@@ -140,5 +141,5 @@ packages = ["hopfilter"]
 warn_unreachable = true
 
 [[tool.mypy.overrides]]
-module = ["h5py", "h5py.*"]
+module = ["h5py", "h5py.*", "hnswlib"]
 ignore_missing_imports = true
