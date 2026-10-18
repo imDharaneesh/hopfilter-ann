@@ -13,12 +13,27 @@ set_source_files_properties(src/common/version.cpp
 
 hopfilter_add_module(distance
     SOURCES
-        src/distance/kernels.cpp
+        src/distance/cpu_features.cpp
+        src/distance/kernel_dispatch.cpp
+        src/distance/kernels_scalar.cpp
         src/distance/metrics.cpp
         src/distance/metric_registry.cpp
     DEPENDS
         hopfilter::common
 )
+
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(AMD64|amd64|x86_64|x64)$")
+    target_sources(hopfilter_distance PRIVATE src/distance/kernels_avx2.cpp)
+    target_compile_definitions(hopfilter_distance PRIVATE HOPFILTER_HAVE_AVX2_KERNELS=1)
+    if(MSVC)
+        set(hopfilterAvx2Flags /arch:AVX2)
+    else()
+        set(hopfilterAvx2Flags -mavx2 -mfma)
+    endif()
+    set_source_files_properties(src/distance/kernels_avx2.cpp
+        PROPERTIES COMPILE_OPTIONS "${hopfilterAvx2Flags}"
+    )
+endif()
 
 hopfilter_add_module(storage
     SOURCES

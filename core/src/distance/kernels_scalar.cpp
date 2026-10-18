@@ -28,14 +28,14 @@ float blockedSum(std::span<const float> lhs, std::span<const float> rhs, PairTer
 
 }
 
-float squaredL2(std::span<const float> lhs, std::span<const float> rhs) noexcept {
+float scalarSquaredL2(std::span<const float> lhs, std::span<const float> rhs) noexcept {
     return blockedSum(lhs, rhs, [](float left, float right) {
         const float difference = left - right;
         return difference * difference;
     });
 }
 
-float dotProduct(std::span<const float> lhs, std::span<const float> rhs) noexcept {
+float scalarDotProduct(std::span<const float> lhs, std::span<const float> rhs) noexcept {
     return blockedSum(lhs, rhs, [](float left, float right) { return left * right; });
 }
 
