@@ -6,7 +6,10 @@ from hopfilter.errors import (
     EmptyDatasetError,
     HopfilterError,
     IndexNotBuiltError,
+    IndexStateError,
+    InvalidArgumentError,
     InvalidConfigError,
+    SerializationError,
     UnknownIdError,
 )
 
@@ -20,6 +23,9 @@ from hopfilter.errors import (
         (DatasetIntegrityError, RuntimeError),
         (EmptyDatasetError, ValueError),
         (UnknownIdError, KeyError),
+        (InvalidArgumentError, ValueError),
+        (IndexStateError, RuntimeError),
+        (SerializationError, RuntimeError),
     ],
 )
 def test_error_is_catchable_as_library_and_builtin_type(

@@ -6,8 +6,20 @@ class InvalidConfigError(HopfilterError, ValueError):
     """A configuration value is missing, malformed, or out of range."""
 
 
+class InvalidArgumentError(HopfilterError, ValueError):
+    """A call violated an API contract, e.g. a vector of the wrong dimension or ``k == 0``."""
+
+
 class IndexNotBuiltError(HopfilterError, RuntimeError):
     """An index operation was requested before the index was built or loaded."""
+
+
+class IndexStateError(HopfilterError, RuntimeError):
+    """The index cannot perform the operation in its current state, e.g. it is full."""
+
+
+class SerializationError(HopfilterError, RuntimeError):
+    """A saved index is missing, truncated, corrupted, or from an unsupported version."""
 
 
 class DatasetNotFoundError(HopfilterError, FileNotFoundError):
