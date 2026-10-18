@@ -38,6 +38,15 @@ hopfilter_add_module(graph
         hopfilter::storage
 )
 
+hopfilter_add_module(search
+    SOURCES
+        src/search/search_layer.cpp
+        src/search/search_strategy.cpp
+    DEPENDS
+        hopfilter::common
+        hopfilter::graph
+)
+
 add_library(hopfilter_core INTERFACE)
 add_library(hopfilter::core ALIAS hopfilter_core)
 get_property(hopfilterModules GLOBAL PROPERTY HOPFILTER_MODULES)
