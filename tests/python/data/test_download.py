@@ -66,6 +66,23 @@ def test_download_skips_fetch_when_already_extracted(tmp_path: Path) -> None:
     assert len(fetcher.requested_urls) == 1
 
 
+def test_single_file_dataset_is_stored_in_its_own_directory(tmp_path: Path) -> None:
+    payload = b"\x89HDF\r\n\x1a\n fake hdf5 bytes"
+    spec = DatasetSpec(
+        name="toy-vectors",
+        url="https://example.invalid/datasets/toy-vectors.hdf5",
+        sha256=hashlib.sha256(payload).hexdigest(),
+        directory_name="toy-vectors",
+        archive="file",
+    )
+
+    dataset_dir = DatasetDownloader(FakeFetcher(payload), tmp_path).download(spec)
+
+    assert spec.file_name == "toy-vectors.hdf5"
+    assert (dataset_dir / "toy-vectors.hdf5").read_bytes() == payload
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["toy-vectors"]
+
+
 def test_checksum_mismatch_raises_and_leaves_nothing(tmp_path: Path) -> None:
     payload = make_zip({"toy/ratings.dat": ""})
     tampered_spec = spec_for(b"different bytes")
@@ -109,7 +126,7 @@ def test_http_fetcher_refuses_non_https(tmp_path: Path) -> None:
         HttpFetcher().fetch("http://example.invalid/data.zip", tmp_path / "data.zip")
 
 
-@pytest.mark.parametrize("name", ["movielens-1m", "movielens-25m"])
+@pytest.mark.parametrize("name", ["movielens-1m", "movielens-25m", "sift-128-euclidean"])
 def test_registry_specs_are_https_with_full_sha256(name: str) -> None:
     spec = DATASETS[name]
 

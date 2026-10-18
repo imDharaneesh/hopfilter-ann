@@ -4,9 +4,10 @@ import urllib.request
 import zipfile
 from collections.abc import Mapping
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from types import MappingProxyType
-from typing import Protocol
+from typing import Literal, Protocol
+from urllib.parse import urlparse
 
 from hopfilter.errors import DatasetIntegrityError, InvalidConfigError
 
@@ -15,23 +16,32 @@ DEFAULT_TIMEOUT_SECONDS = 60.0
 ALLOWED_URL_SCHEMES = ("https://",)
 PARTIAL_SUFFIX = ".part"
 STAGING_PREFIX = ".staging-"
+EXTRACTED_DIRECTORY = "extracted"
 
 
 @dataclass(frozen=True)
 class DatasetSpec:
-    """Where a dataset archive lives and how to verify it.
+    """Where a dataset lives and how to verify it.
 
     Attributes:
         name: Registry name used on the command line, e.g. ``movielens-1m``.
-        url: HTTPS URL of a zip archive.
-        sha256: Expected SHA-256 of the archive, lower-case hex.
-        directory_name: Top-level directory the archive extracts to.
+        url: HTTPS URL of the download.
+        sha256: Expected SHA-256 of the download, lower-case hex.
+        directory_name: Directory the dataset ends up in under the data directory.
+        archive: ``"zip"`` to extract an archive whose top-level folder is
+            ``directory_name``; ``"file"`` to store a single file inside it.
     """
 
     name: str
     url: str
     sha256: str
     directory_name: str
+    archive: Literal["zip", "file"] = "zip"
+
+    @property
+    def file_name(self) -> str:
+        """Last path component of the URL, e.g. ``sift-128-euclidean.hdf5``."""
+        return PurePosixPath(urlparse(self.url).path).name
 
 
 class UrlFetcher(Protocol):
@@ -60,18 +70,21 @@ class HttpFetcher:
 
 
 class DatasetDownloader:
-    """Downloads, verifies and extracts dataset archives under ``data_dir``."""
+    """Downloads, verifies and unpacks datasets under ``data_dir``."""
 
     def __init__(self, fetcher: UrlFetcher, data_dir: Path) -> None:
         self._fetcher = fetcher
         self._data_dir = data_dir
 
     def dataset_dir(self, spec: DatasetSpec) -> Path:
-        """Directory the dataset is extracted to."""
+        """Directory the dataset ends up in."""
         return self._data_dir / spec.directory_name
 
     def download(self, spec: DatasetSpec) -> Path:
-        """Fetch ``spec`` unless already present, and return its extracted directory.
+        """Fetch ``spec`` unless already present, and return its directory.
+
+        Everything happens in a staging directory that is only renamed into place once
+        the checksum and layout are verified.
 
         Raises:
             DatasetIntegrityError: The checksum does not match or the archive layout
@@ -80,18 +93,25 @@ class DatasetDownloader:
         target = self.dataset_dir(spec)
         if target.is_dir():
             return target
-        self._data_dir.mkdir(parents=True, exist_ok=True)
-        archive = self._data_dir / f"{spec.directory_name}.zip{PARTIAL_SUFFIX}"
         staging = self._data_dir / f"{STAGING_PREFIX}{spec.directory_name}"
         try:
-            self._fetcher.fetch(spec.url, archive)
-            verify_sha256(archive, spec.sha256)
-            extract_zip(archive, staging)
-            _promote(staging / spec.directory_name, target, spec)
+            _promote(self._stage(spec, staging), target, spec)
         finally:
-            archive.unlink(missing_ok=True)
             shutil.rmtree(staging, ignore_errors=True)
         return target
+
+    def _stage(self, spec: DatasetSpec, staging: Path) -> Path:
+        staging.mkdir(parents=True, exist_ok=True)
+        payload = staging / f"{spec.file_name}{PARTIAL_SUFFIX}"
+        self._fetcher.fetch(spec.url, payload)
+        verify_sha256(payload, spec.sha256)
+        if spec.archive == "zip":
+            extract_zip(payload, staging / EXTRACTED_DIRECTORY)
+            return staging / EXTRACTED_DIRECTORY / spec.directory_name
+        folder = staging / spec.directory_name
+        folder.mkdir()
+        payload.rename(folder / spec.file_name)
+        return folder
 
 
 def verify_sha256(path: Path, expected: str) -> None:
@@ -136,6 +156,13 @@ DATASETS: Mapping[str, DatasetSpec] = MappingProxyType(
                 url="https://files.grouplens.org/datasets/movielens/ml-25m.zip",
                 sha256="8b21cfb7eb1706b4ec0aac894368d90acf26ebdfb6aced3ebd4ad5bd1eb9c6aa",
                 directory_name="ml-25m",
+            ),
+            DatasetSpec(
+                name="sift-128-euclidean",
+                url="https://ann-benchmarks.com/sift-128-euclidean.hdf5",
+                sha256="dd6f0a6ed6b7ebb8934680f861a33ed01ff33991eaee4fd60914d854a0ca5984",
+                directory_name="sift-128-euclidean",
+                archive="file",
             ),
         )
     }
