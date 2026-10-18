@@ -79,16 +79,21 @@ TEST(MetricRegistryTest, BuiltinsCreateMetricsByName) {
     }
 }
 
+template <typename Action>
+std::string invalidArgumentMessage(Action action) {
+    try {
+        action();
+    } catch (const InvalidArgumentError& error) {
+        return error.what();
+    }
+    return "<no InvalidArgumentError thrown>";
+}
+
 TEST(MetricRegistryTest, UnknownNameListsKnownMetrics) {
     const auto registry = MetricRegistry::withBuiltins();
 
-    try {
-        static_cast<void>(registry.create("manhattan"));
-        FAIL() << "expected InvalidArgumentError";
-    } catch (const InvalidArgumentError& error) {
-        EXPECT_EQ(std::string{error.what()},
-                  "unknown metric 'manhattan'; known metrics: cosine, ip, l2");
-    }
+    EXPECT_EQ(invalidArgumentMessage([&] { static_cast<void>(registry.create("manhattan")); }),
+              "unknown metric 'manhattan'; known metrics: cosine, ip, l2");
 }
 
 TEST(MetricRegistryTest, CustomMetricCanBeRegistered) {
@@ -101,11 +106,10 @@ TEST(MetricRegistryTest, CustomMetricCanBeRegistered) {
 
 TEST(MetricRegistryTest, RejectsDuplicateAndEmptyRegistrations) {
     auto registry = MetricRegistry::withBuiltins();
+    const MetricRegistry::Factory makeL2 = [] { return std::make_unique<L2Metric>(); };
 
-    EXPECT_THROW(registry.registerMetric("l2", [] { return std::make_unique<L2Metric>(); }),
-                 InvalidArgumentError);
-    EXPECT_THROW(registry.registerMetric("", [] { return std::make_unique<L2Metric>(); }),
-                 InvalidArgumentError);
+    EXPECT_THROW(registry.registerMetric("l2", makeL2), InvalidArgumentError);
+    EXPECT_THROW(registry.registerMetric("", makeL2), InvalidArgumentError);
     EXPECT_THROW(registry.registerMetric("empty", nullptr), InvalidArgumentError);
 }
 

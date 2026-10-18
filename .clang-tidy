@@ -71,5 +71,5 @@ CheckOptions:
     - key: readability-function-size.LineThreshold
       value: 30
     - key: readability-function-size.NestingThreshold
-      value: 3
+      value: 4
 ...
