@@ -251,6 +251,7 @@ Each phase ends with a written summary of what was built and the measured result
 - Tests: graph invariants (degree bounds, level consistency), recall against brute force on small random data, serialization round trip, edge cases (empty index, `k` larger than size, duplicate vectors).
 - Download SIFT1M and GloVe from ANN-Benchmarks and tune `M`, `efConstruction`, `efSearch`.
 - **Exit:** about 0.95 recall@10 on SIFT1M, all tests and sanitizers clean.
+- **Outcome:** done on the recall target. SIFT1M recall@10 is 0.944 at efSearch 48 and 0.964 at 64 (1,767 QPS single-thread, scalar kernels); build takes 1,309 s single-threaded. 92 C++ tests pass under MSVC `/W4 /WX` and GCC `-Werror`, clang-tidy is clean, and the Python suite passes. ASan, UBSan and TSan run only in the CI jobs; this Windows machine has no sanitizer toolchain, so they have not been run locally. Details in [`docs/benchmarks.md`](docs/benchmarks.md#raw-ann-scalar-core-phase-2).
 
 ### Phase 3: Performance (week 4)
 
@@ -387,7 +388,7 @@ Summary; the full protocol is in [`docs/benchmarks.md`](docs/benchmarks.md).
 |---|---|
 | 0. Foundation | Done |
 | 1. Two-tower baseline | Done; follow-ups: early stopping, temperature sweep, MovieLens-25M run |
-| 2. HNSW core | Not started |
+| 2. HNSW core | Done; sanitizer results come from CI |
 | 3. Performance | Not started |
 | 4. Filtered search | Not started |
 | 5. Pipeline and benchmarks | Not started |

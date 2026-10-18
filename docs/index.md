@@ -11,7 +11,7 @@ hopfilter is an open-source retrieval stack in three parts:
 | Filtered search | C++20 | Applies attribute filters *during* graph traversal and adapts to filter selectivity |
 
 !!! warning "Pre-alpha"
-    Phases 0 (foundation) and 1 (two-tower baseline) are done; see the [logQ ablation](benchmarks.md#logq-ablation-phase-1). The HNSW index comes next. See the [roadmap](https://github.com/imDharaneesh/hopfilter-ann/blob/master/PLAN.md#6-phases) for what comes next.
+    Phases 0 (foundation), 1 (two-tower baseline) and 2 (HNSW core) are done: see the [logQ ablation](benchmarks.md#logq-ablation-phase-1) and the [SIFT1M results](benchmarks.md#raw-ann-scalar-core-phase-2). SIMD kernels and parallel build come next. See the [roadmap](https://github.com/imDharaneesh/hopfilter-ann/blob/master/PLAN.md#6-phases) for what comes next.
 
 ## Why filtered search
 
