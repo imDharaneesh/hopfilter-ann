@@ -15,6 +15,13 @@ hopfilter_add_module(distance
         hopfilter::common
 )
 
+hopfilter_add_module(storage
+    SOURCES
+        src/storage/vector_store.cpp
+    DEPENDS
+        hopfilter::common
+)
+
 add_library(hopfilter_core INTERFACE)
 add_library(hopfilter::core ALIAS hopfilter_core)
 get_property(hopfilterModules GLOBAL PROPERTY HOPFILTER_MODULES)
