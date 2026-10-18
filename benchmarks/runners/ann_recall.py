@@ -80,11 +80,14 @@ def load_dataset(config: AnnRecallConfig) -> AnnBenchmarkDataset:
     return load_ann_benchmark(dataset_dir / spec.file_name)
 
 
+def accepts_threads(call: Callable[..., object]) -> bool:
+    return "threads" in (call.__doc__ or "")
+
+
 def with_threads[Result](call: Callable[..., Result], threads: int, *args: object) -> Result:
-    try:
+    if accepts_threads(call):
         return call(*args, threads=threads)
-    except TypeError:
-        return call(*args)
+    return call(*args)
 
 
 def build_or_load(
