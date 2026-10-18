@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstddef>
-#include <iosfwd>
 #include <span>
 
 #include <hopfilter/common/types.hpp>
@@ -31,14 +30,6 @@ public:
 
     [[nodiscard]] virtual std::size_t size() const noexcept = 0;
     [[nodiscard]] virtual Dimension dimension() const noexcept = 0;
-};
-
-/// Something that can write itself to a binary stream.
-class Serializable {
-public:
-    virtual ~Serializable() = default;
-
-    virtual void save(std::ostream& sink) const = 0;
 };
 
 }  // namespace hopfilter

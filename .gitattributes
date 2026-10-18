@@ -7,3 +7,4 @@
 *.png binary
 *.hdf5 binary
 *.npy binary
+*.hopf binary

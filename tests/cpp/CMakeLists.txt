@@ -24,6 +24,7 @@ add_executable(hopfilter_core_tests
     index/hnsw_index_builder_test.cpp
     index/hnsw_index_test.cpp
     index/hnsw_recall_test.cpp
+    io/index_serializer_test.cpp
     search/search_test.cpp
     storage/vector_store_test.cpp
 )
@@ -31,7 +32,9 @@ target_include_directories(hopfilter_core_tests PRIVATE ${CMAKE_CURRENT_SOURCE_D
 
 target_link_libraries(hopfilter_core_tests PRIVATE hopfilter::core GTest::gtest_main)
 target_compile_definitions(hopfilter_core_tests
-    PRIVATE HOPFILTER_EXPECTED_VERSION="${PROJECT_VERSION}"
+    PRIVATE
+        HOPFILTER_EXPECTED_VERSION="${PROJECT_VERSION}"
+        HOPFILTER_FIXTURE_DIR="${PROJECT_SOURCE_DIR}/tests/fixtures"
 )
 
 hopfilter_set_warnings(hopfilter_core_tests)

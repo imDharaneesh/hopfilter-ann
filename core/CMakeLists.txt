@@ -59,6 +59,15 @@ hopfilter_add_module(index
         hopfilter::search
 )
 
+hopfilter_add_module(io
+    SOURCES
+        src/io/binary_stream.cpp
+        src/io/crc32.cpp
+        src/io/index_serializer.cpp
+    DEPENDS
+        hopfilter::index
+)
+
 add_library(hopfilter_core INTERFACE)
 add_library(hopfilter::core ALIAS hopfilter_core)
 get_property(hopfilterModules GLOBAL PROPERTY HOPFILTER_MODULES)
