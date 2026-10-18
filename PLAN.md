@@ -128,7 +128,7 @@ HNSW is implemented from Malkov and Yashunin (2016/2018). logQ correction is imp
 | Environment | uv (`uv.lock` pins every dev tool), `.python-version` = 3.14 |
 | Benchmarks | faiss-cpu, hnswlib, h5py, matplotlib |
 | Tests | GoogleTest (C++), pytest + hypothesis (Python), Google Benchmark (micro) |
-| Quality | clang-format 18, clang-tidy 18, ruff, mypy, pre-commit, ASan/UBSan/TSan |
+| Quality | clang-format 18, clang-tidy 22, ruff, mypy, pre-commit, ASan/UBSan/TSan |
 | CI/CD | GitHub Actions, cibuildwheel, PyPI trusted publishing |
 | Container | Multi-stage Dockerfile on `python:3.14-slim-trixie` |
 | Docs | MkDocs Material |
@@ -328,7 +328,7 @@ See [`.github/workflows/ci.yml`](.github/workflows/ci.yml) and [`.github/workflo
 | Workflow | Job | What it checks |
 |---|---|---|
 | `ci` | `lint` | All pre-commit hooks on every file |
-| `ci` | `clang-tidy` | clang-tidy 18 on the core and C++ tests |
+| `ci` | `clang-tidy` | clang-tidy 22 on the core and C++ tests |
 | `ci` | `python-tests` | pytest + coverage on Linux/Windows/macOS x Python 3.13/3.14 |
 | `ci` | `cpp-tests` | ctest with GCC, Clang, AppleClang and MSVC, warnings as errors |
 | `ci` | `sanitizers` | ASan, UBSan and TSan builds of the C++ tests |

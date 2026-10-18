@@ -43,7 +43,7 @@ lint = [
     "mypy>=1.15",
     "clang-format==18.1.8",
     "pre-commit>=4.0",
-    "clang-tidy==18.1.8",
+    "clang-tidy==22.1.8",
     "types-pyyaml>=6.0",
 ]
 docs = ["mkdocs>=1.6,<2", "mkdocs-material>=9.6"]

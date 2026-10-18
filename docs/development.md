@@ -103,14 +103,14 @@ ctest --test-dir build-asan --output-on-failure
 
 ### clang-tidy
 
-clang-tidy 18 is pinned in the `lint` group. It needs a `compile_commands.json`, which the Ninja and Makefile generators produce:
+clang-tidy 22 is pinned in the `lint` group (clang-format stays at 18 so formatting never shifts). It needs a `compile_commands.json`, which the Ninja and Makefile generators produce. On Linux and macOS:
 
 ```bash
 cmake -S . -B build-tidy -G Ninja -DHOPFILTER_BUILD_TESTS=ON
-uv run clang-tidy -p build-tidy core/src/common/version.cpp
+git ls-files 'core/src/*.cpp' 'tests/cpp/*.cpp' | xargs uv run clang-tidy -p build-tidy --quiet
 ```
 
-clang-tidy 18 cannot parse the libstdc++ headers shipped with GCC 15 and newer. Run it against GCC 13/14 headers, or rely on the CI job, which uses Ubuntu 24.04.
+On Windows, generate the database from a Visual Studio developer prompt (`vcvars64.bat`) with `-G Ninja -DCMAKE_CXX_COMPILER=cl`, and clang-tidy then checks against the MSVC standard library. Avoid a MinGW compile database: clang's parser lags the newest GCC libstdc++ headers.
 
 ## Docker
 

@@ -7,11 +7,13 @@ Checks: >
     -cppcoreguidelines-avoid-magic-numbers,
     -cppcoreguidelines-pro-bounds-pointer-arithmetic,
     -cppcoreguidelines-pro-bounds-constant-array-index,
+    -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access,
     misc-*,
     -misc-non-private-member-variables-in-classes,
     -misc-include-cleaner,
     modernize-*,
     -modernize-use-trailing-return-type,
+    -modernize-use-designated-initializers,
     performance-*,
     readability-*,
     -readability-magic-numbers,
@@ -22,6 +24,8 @@ WarningsAsErrors: '*'
 HeaderFilterRegex: '.*/hopfilter/.*'
 FormatStyle: file
 CheckOptions:
+    - key: cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor
+      value: true
     - key: readability-identifier-naming.NamespaceCase
       value: lower_case
     - key: readability-identifier-naming.ClassCase
@@ -62,6 +66,8 @@ CheckOptions:
       value: k
     - key: readability-function-cognitive-complexity.Threshold
       value: 15
+    - key: readability-function-cognitive-complexity.IgnoreMacros
+      value: true
     - key: readability-function-size.LineThreshold
       value: 30
     - key: readability-function-size.NestingThreshold
