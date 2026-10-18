@@ -1,0 +1,104 @@
+{
+    "config": {
+        "dataset": "glove-100-angular",
+        "results_path": "benchmarks/results/ann_glove100.json",
+        "index_cache": "data/indexes/glove-100-angular-M24-efc300.hopf",
+        "data_dir": "data",
+        "max_neighbors": 24,
+        "ef_construction": 300,
+        "seed": 42,
+        "k": 10,
+        "ef_search": [
+            10,
+            16,
+            32,
+            64,
+            128,
+            256,
+            512,
+            768,
+            1024
+        ],
+        "latency_queries": 1000
+    },
+    "environment": {
+        "commit": "e197b6fab6a280df5ae586412fc6bebe8bec10d0",
+        "python": "3.14.3",
+        "platform": "Windows-11-10.0.26200-SP0",
+        "processor": "AMD64 Family 25 Model 68 Stepping 1, AuthenticAMD",
+        "logical_cpus": 16,
+        "memory_gib": 15.8,
+        "threads_used": 1,
+        "simd": "none (scalar kernels, phase 2)"
+    },
+    "build": {
+        "seconds": 11802.125777500041,
+        "loaded_from_cache": false,
+        "rss_mebibytes": 817.15625
+    },
+    "sweep": [
+        {
+            "ef_search": 10,
+            "recall": 0.54669,
+            "qps": 3391.5390393252633,
+            "p50_ms": 0.30615000000000003,
+            "p99_ms": 0.6205679999999998
+        },
+        {
+            "ef_search": 16,
+            "recall": 0.62871,
+            "qps": 2716.445272732083,
+            "p50_ms": 0.3671,
+            "p99_ms": 0.7071979999999998
+        },
+        {
+            "ef_search": 32,
+            "recall": 0.7330300000000001,
+            "qps": 1918.112111199193,
+            "p50_ms": 0.51875,
+            "p99_ms": 0.9915390000000001
+        },
+        {
+            "ef_search": 64,
+            "recall": 0.8140000000000001,
+            "qps": 1033.3156143816252,
+            "p50_ms": 1.0566499999999999,
+            "p99_ms": 1.937147
+        },
+        {
+            "ef_search": 128,
+            "recall": 0.87536,
+            "qps": 542.2027524687638,
+            "p50_ms": 1.92045,
+            "p99_ms": 2.813309
+        },
+        {
+            "ef_search": 256,
+            "recall": 0.9231999999999999,
+            "qps": 279.9636358589112,
+            "p50_ms": 3.43085,
+            "p99_ms": 5.029697
+        },
+        {
+            "ef_search": 512,
+            "recall": 0.95737,
+            "qps": 176.57051073358036,
+            "p50_ms": 5.6943,
+            "p99_ms": 8.345209
+        },
+        {
+            "ef_search": 768,
+            "recall": 0.97165,
+            "qps": 125.01939566537204,
+            "p50_ms": 7.12025,
+            "p99_ms": 11.043495999999998
+        },
+        {
+            "ef_search": 1024,
+            "recall": 0.97987,
+            "qps": 98.89511352976159,
+            "p50_ms": 10.58345,
+            "p99_ms": 15.89363
+        }
+    ]
+}
