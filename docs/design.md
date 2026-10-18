@@ -24,7 +24,7 @@ This document describes the architecture of hopfilter: its modules, their interf
 
 ## 2. System overview
 
-**Implemented:** build skeleton (Phase 0); data, model, training and exact evaluation (Phase 1). **Planned:** index, filtered search, pipeline.
+**Implemented:** build skeleton (Phase 0); data, model, training and exact evaluation (Phase 1); C++ HNSW core, serialization and Python bindings (Phase 2). **Planned:** SIMD and parallel build, filtered search, pipeline.
 
 ```mermaid
 flowchart LR
@@ -111,7 +111,7 @@ flowchart TD
 
 ## 4. Common vocabulary
 
-**Implemented:** `hopfilter::version()`. **Planned (Phase 2):** the rest.
+**Implemented** (Phase 2).
 
 ```cpp
 namespace hopfilter {
@@ -142,7 +142,7 @@ class SerializationError : public std::runtime_error { using std::runtime_error:
 
 ## 5. C++ core modules
 
-### 5.1 distance (Planned, Phase 2 scalar, Phase 3 SIMD)
+### 5.1 distance (Implemented scalar, Phase 3 SIMD)
 
 ```mermaid
 classDiagram
@@ -183,7 +183,7 @@ classDiagram
 - **Open/closed.** New metrics register with `MetricRegistry` under a config name, without touching existing classes.
 - Virtual dispatch costs one indirect call per distance evaluation. Phase 3 measures it; if it shows up in profiles, the search loop is templated on the metric type, with the virtual interface kept for configuration.
 
-### 5.2 storage (Planned, Phase 2)
+### 5.2 storage (Implemented)
 
 ```mermaid
 classDiagram
@@ -204,7 +204,7 @@ classDiagram
 - One contiguous allocation, 64-byte aligned. Each row is padded up to a multiple of the widest SIMD register, so kernels can use aligned loads with no tail handling.
 - `capacity` is fixed at construction. Growing would invalidate spans handed out to concurrent readers, so `append` past capacity throws `IndexStateError`.
 
-### 5.3 graph (Planned, Phase 2)
+### 5.3 graph (Implemented)
 
 ```mermaid
 classDiagram
@@ -233,27 +233,36 @@ classDiagram
     }
     class SimpleNeighborSelector
     class HeuristicNeighborSelector {
-        -metric_: const DistanceMetric&
-        -vectors_: const VectorStore&
-        -extendCandidates_: bool
         -keepPrunedConnections_: bool
+    }
+    class NodeDistances {
+        +between(lhs, rhs) float
+        +toQuery(query, id) float
+        +identical(lhs, rhs) bool
     }
     class VisitedSet {
         -stamps_: vector~uint32_t~
-        -currentEpoch_: uint32_t
-        +reset()
+        -epoch_: uint32_t
+        +clear()
         +markVisited(id) bool
+    }
+    class VisitedSetPool {
+        +acquire() Lease
     }
     NeighborSelector <|.. SimpleNeighborSelector
     NeighborSelector <|.. HeuristicNeighborSelector
+    NeighborSelector ..> NodeDistances : uses per call
+    VisitedSetPool o-- VisitedSet
 ```
 
 - **Level-0 layout.** Level 0 holds most edges and is read on every query, so its links live in one flat array of `(2 * M) + 1` slots per node: a count followed by up to `2 * M` ids. Upper levels hold few nodes and use per-node vectors.
 - **LayerAssigner** draws `floor(-ln(U(0,1)) * mL)` with `mL = 1 / ln(M)`, as in the paper. A seed makes builds reproducible.
-- **HeuristicNeighborSelector** follows Algorithm 4 of Malkov and Yashunin: a candidate is kept only if it is closer to the base than to every neighbor already selected. That keeps edges spread in different directions. `extendCandidates` and `keepPrunedConnections` are the paper's two optional flags.
-- **VisitedSet** keeps one stamp per node and bumps an epoch counter on reset, so clearing it is O(1) rather than O(N). On counter wrap-around the stamps are cleared once.
+- **HeuristicNeighborSelector** follows Algorithm 4 of Malkov and Yashunin: a candidate is kept only if it is at least as close to the base as to every neighbor already selected. That keeps edges spread in different directions. `keepPrunedConnections` refills free slots with the closest discarded candidates. The paper's `extendCandidates` flag is not implemented: it targets extremely clustered data and would need graph access during selection.
+- **Exact duplicates.** With identical vectors every comparison is a tie. An exact copy of an already selected neighbor (detected by comparing vectors, not by distance 0, since `1 - dot` is not a metric) takes that neighbor's slot, newest copy winning, instead of using a new slot. Without this rule a duplicate cluster fills every slot with copies and traps any search that enters it. Known limit: when one vector is inserted more times than `efConstruction`, the insert-time search cannot tell the copies apart, and some copies may be unreachable. Searches still return correct distances, because any copy is an equally good answer. Deduplicate before inserting if every copy must be retrievable.
+- **NodeDistances** is a view over the metric and vector store passed to selectors on each call. Selectors therefore hold no references to index storage, which the builder could not give them before the index exists.
+- **VisitedSet** keeps one stamp per node and bumps an epoch counter in `clear()`, so clearing is O(1) rather than O(N). On counter wrap-around the stamps are wiped once. `VisitedSetPool` hands sets out through RAII leases, so concurrent queries never share one and a 1M-node set is never reallocated per query.
 
-### 5.4 index (Planned, Phase 2)
+### 5.4 index (Implemented)
 
 ```mermaid
 classDiagram
@@ -266,10 +275,6 @@ classDiagram
         +search(query, k, request: SearchRequest) SearchResults
         +size() size_t
         +dimension() Dimension
-    }
-    class Serializable {
-        <<interface>>
-        +save(sink: ostream&)
     }
     class IndexConfig {
         +dimension: Dimension
@@ -298,14 +303,13 @@ classDiagram
     }
     Insertable <|.. HnswIndex
     Searchable <|.. HnswIndex
-    Serializable <|.. HnswIndex
     HnswIndexBuilder ..> IndexConfig : validates
     HnswIndexBuilder ..> HnswIndex : creates
 ```
 
 - **Builder.** `HnswIndexBuilder::build()` is the only way to create an `HnswIndex`. It validates the config (positive dimension, `maxNeighbors >= 2`, `efConstruction >= maxNeighbors`, a known metric name) and throws `InvalidArgumentError` with a message naming the field. Anything the caller does not inject gets a default, such as `HeuristicNeighborSelector` or the registry metric for `metricName`.
 - **Dependency inversion.** `HnswIndex` never constructs its collaborators. It receives them from the builder, which is how tests inject a fake `LayerAssigner` to build a graph with known levels.
-- **Interface segregation.** Benchmark adapters for FAISS and hnswlib implement only `Searchable`. Read-only consumers take a `const Searchable&`.
+- **Interface segregation.** Benchmark adapters for FAISS and hnswlib implement only `Searchable`. Read-only consumers take a `const Searchable&`. There is no `Serializable` interface on the index: `io` depends on `index`, so the index implementing serialization would create a cycle. `IndexSerializer` is the single entry point.
 
 ### 5.5 filter (Planned, Phase 4)
 
@@ -362,7 +366,7 @@ classDiagram
 - `AndPredicate`, `OrPredicate` and `NotPredicate` form a composite. Python filter expressions compile into this tree once per query.
 - `ExactSelectivityEstimator` materializes a `BitsetPredicate` and counts its set bits; it is exact but O(N). `SamplingSelectivityEstimator` evaluates the predicate on a fixed-seed sample of ids, which is fast and good enough to choose a strategy.
 
-### 5.6 search (Planned, Phase 2 unfiltered, Phase 4 filtered)
+### 5.6 search (Implemented unfiltered, Phase 4 filtered)
 
 ```mermaid
 classDiagram
@@ -416,7 +420,7 @@ classDiagram
 
 `SearchContext` gives a strategy read-only access to the index internals plus a per-thread `VisitedSet`. Strategies therefore stay stateless, and one strategy instance serves all threads.
 
-### 5.7 io (Planned, Phase 2)
+### 5.7 io (Implemented)
 
 `IndexSerializer` writes a versioned, little-endian binary format:
 
@@ -428,7 +432,7 @@ classDiagram
 | Attributes | Optional: column names, types and values (Phase 4) |
 | Footer | CRC-32 of every preceding byte |
 
-- Loading checks magic, version and CRC before allocating anything large, and throws `SerializationError` on any mismatch.
+- Loading checks magic and version, validates every header field before allocating storage, bounds-checks each count and id, and verifies the CRC before returning an index. Any problem, including an allocation failure caused by a corrupt header, surfaces as `SerializationError`.
 - **Compatibility rule:** version N reads files from versions N and N-1. A fixture index saved by the previous release is checked into `tests/fixtures/` and loaded in CI.
 
 ---
@@ -454,7 +458,7 @@ All follow Malkov and Yashunin (arXiv:1603.09320). Only the shape is described h
 
 | Operation | Guarantee |
 |---|---|
-| `search` on a built index | Lock-free and safe from any number of threads. Each thread uses its own `VisitedSet` from a thread-local pool |
+| `search` on a built index | Safe from any number of threads. Each query leases its own `VisitedSet` from a pool; only the lease and return take a short lock, the traversal itself takes none |
 | `insert` | Serialized by `insertMutex_` in v0.1. Phase 3 moves to per-node locks for parallel build |
 | `search` concurrent with `insert` | Not supported in v0.1. Documented, and asserted in debug builds |
 | `save` | Safe concurrently with `search`; not with `insert` |
@@ -754,3 +758,9 @@ classDiagram
 | 9 | 2026-10-17 | PyTorch from the CPU wheel index on Linux | The default Linux wheels bundle CUDA (several GB). The CPU build is enough for MovieLens-scale training and keeps CI fast |
 | 10 | 2026-10-17 | Global temporal split rather than leave-last-out per user | Leave-last-out lets training see interactions from other users that happen after a test interaction. A global cut leaks nothing |
 | 11 | 2026-10-17 | Interaction-level (micro) recall | Head and tail segments are empty for many users, so per-user averages would be dominated by users with one or two segment items |
+| 12 | 2026-10-18 | One CMake target per core module | Every module dependency is an explicit `target_link_libraries` line, so a new edge in the module graph shows up in review |
+| 13 | 2026-10-18 | clang-tidy 22 (clang-format stays at 18) | clang-tidy 18 could parse neither the MSVC STL nor GCC 16's libstdc++, so it only ran in CI. 22 runs locally against an MSVC compile database |
+| 14 | 2026-10-18 | Visited sets come from a mutex-guarded pool, not thread-locals | The lock covers only lease and return. Unlike a `thread_local`, the pool is per index, so two indexes of different sizes never share a set |
+| 15 | 2026-10-18 | Heuristic keeps ties and collapses exact duplicates into one slot | Measured on 80 points including 30 copies: pruning ties left 9 nodes reachable, keeping all ties trapped searches inside the copies. Collapsing copies keeps every distinct node reachable |
+| 16 | 2026-10-18 | Level generator built from raw `mt19937_64` bits | `std::uniform_real_distribution` differs between standard libraries; raw bits give the same graph for the same seed on MSVC, libstdc++ and libc++ |
+| 17 | 2026-10-18 | No `Serializable` interface on `HnswIndex` | `io` depends on `index`; `IndexSerializer` owns the format so the index stays unaware of it |

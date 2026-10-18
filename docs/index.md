@@ -20,7 +20,7 @@ Production queries rarely ask only for the nearest vectors. They ask for the nea
 - **Post-filtering** retrieves the top-k and then drops non-matching items. With a 1% filter, almost nothing survives.
 - **Pre-filtering** restricts the search to matching items. The proximity graph loses connectivity and search falls back to a slow scan.
 
-hopfilter keeps non-matching nodes as routing waypoints while admitting only matching nodes to the result set. It estimates filter selectivity per query and switches to exact search when only a handful of items match. The [design](design.md#56-search-planned-phase-2-unfiltered-phase-4-filtered) covers the details. The [benchmarks](benchmarks.md) will show where this wins and where it does not.
+hopfilter keeps non-matching nodes as routing waypoints while admitting only matching nodes to the result set. It estimates filter selectivity per query and switches to exact search when only a handful of items match. The [design](design.md#56-search-implemented-unfiltered-phase-4-filtered) covers the details. The [benchmarks](benchmarks.md) will show where this wins and where it does not.
 
 ## Where to go next
 
