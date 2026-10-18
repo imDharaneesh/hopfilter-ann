@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <span>
 #include <vector>
 
@@ -10,12 +11,29 @@
 namespace hopfilter {
 namespace {
 
-bool closerToBaseThanToSelected(const Neighbor& candidate,
-                                const std::vector<NodeId>& selected,
-                                const NodeDistances& distances) {
-    return std::ranges::all_of(selected, [&](NodeId chosen) {
-        return candidate.distance < distances.between(candidate.id, chosen);
-    });
+enum class Verdict : std::uint8_t { Keep, Prune, Duplicate };
+
+struct Judgement {
+    Verdict verdict;
+    std::size_t duplicateOf;
+};
+
+// Ties keep the candidate. An exact copy of a selected neighbor adds no direction, so it
+// takes that neighbor's slot instead of a new one (newest copy wins, which chains copies
+// together); otherwise a cluster of duplicates fills every slot with copies and traps any
+// search that enters it.
+Judgement judge(const Neighbor& candidate,
+                const std::vector<NodeId>& selected,
+                const NodeDistances& distances) {
+    for (std::size_t slot = 0; slot < selected.size(); ++slot) {
+        if (candidate.distance > distances.between(candidate.id, selected[slot])) {
+            return {Verdict::Prune, slot};
+        }
+        if (distances.identical(candidate.id, selected[slot])) {
+            return {Verdict::Duplicate, slot};
+        }
+    }
+    return {Verdict::Keep, selected.size()};
 }
 
 }  // namespace
@@ -42,8 +60,11 @@ std::vector<NodeId> HeuristicNeighborSelector::select(std::span<const Neighbor> 
         if (selected.size() == maxNeighbors) {
             break;
         }
-        if (closerToBaseThanToSelected(candidate, selected, distances)) {
+        const auto [verdict, slot] = judge(candidate, selected, distances);
+        if (verdict == Verdict::Keep) {
             selected.push_back(candidate.id);
+        } else if (verdict == Verdict::Duplicate) {
+            selected[slot] = std::max(selected[slot], candidate.id);
         } else if (keepPrunedConnections_) {
             pruned.push_back(candidate.id);
         }

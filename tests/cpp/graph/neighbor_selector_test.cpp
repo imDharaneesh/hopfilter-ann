@@ -75,6 +75,22 @@ TEST_F(NeighborSelectorTest, KeepPrunedConnectionsRefillsFreeSlots) {
     EXPECT_EQ(selected, (std::vector<NodeId>{kA, kC, kB}));
 }
 
+TEST(HeuristicNeighborSelectorTest, KeepsNewestCopyOfDuplicatesAndStillLinksOutward) {
+    const L2Metric metric;
+    VectorStore store{2, 5};
+    for (int copy = 0; copy < 3; ++copy) {
+        static_cast<void>(store.append(std::vector<float>{0.0F, 0.0F}));
+    }
+    static_cast<void>(store.append(std::vector<float>{1.0F, 0.0F}));
+    static_cast<void>(store.append(std::vector<float>{0.0F, 1.0F}));
+    const NodeDistances distances{metric, store};
+    const std::vector<Neighbor> candidatesOfCopy{{1, 0.0F}, {2, 0.0F}, {3, 1.0F}, {4, 1.0F}};
+
+    const auto selected = HeuristicNeighborSelector{}.select(candidatesOfCopy, 4, distances);
+
+    EXPECT_EQ(selected, (std::vector<NodeId>{2, 3, 4}));
+}
+
 TEST_F(NeighborSelectorTest, SelectorsHandleEmptyCandidates) {
     const std::vector<Neighbor> none;
 

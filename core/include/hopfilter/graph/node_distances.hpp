@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <span>
 
 #include <hopfilter/common/types.hpp>
@@ -21,6 +22,11 @@ public:
 
     [[nodiscard]] float toQuery(std::span<const float> query, NodeId id) const noexcept {
         return metric_->distance(query, vectors_->at(id));
+    }
+
+    /// Whether two stored vectors are bit-for-bit equal; stops at the first difference.
+    [[nodiscard]] bool identical(NodeId lhs, NodeId rhs) const noexcept {
+        return std::ranges::equal(vectors_->at(lhs), vectors_->at(rhs));
     }
 
 private:
