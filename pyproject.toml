@@ -28,7 +28,7 @@ dependencies = ["numpy>=2.1", "pyyaml>=6.0"]
 [project.optional-dependencies]
 train = ["torch>=2.9", "polars>=1.30"]
 plot = ["matplotlib>=3.10"]
-bench = ["h5py>=3.12"]
+bench = ["h5py>=3.12", "psutil>=7.0"]
 
 [project.urls]
 Homepage = "https://github.com/imDharaneesh/hopfilter-ann"
@@ -46,6 +46,7 @@ lint = [
     "pre-commit>=4.0",
     "clang-tidy==22.1.8",
     "types-pyyaml>=6.0",
+    "types-psutil>=7.0",
 ]
 docs = ["mkdocs>=1.6,<2", "mkdocs-material>=9.6"]
 dev = [

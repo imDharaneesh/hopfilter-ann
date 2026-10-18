@@ -1,0 +1,10 @@
+dataset: glove-100-angular
+data_dir: data
+max_neighbors: 24
+ef_construction: 300
+seed: 42
+k: 10
+ef_search: [10, 16, 32, 64, 128, 256, 512, 768, 1024]
+latency_queries: 1000
+index_cache: data/indexes/glove-100-angular-M24-efc300.hopf
+results_path: benchmarks/results/ann_glove100.json

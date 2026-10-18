@@ -164,6 +164,13 @@ DATASETS: Mapping[str, DatasetSpec] = MappingProxyType(
                 directory_name="sift-128-euclidean",
                 archive="file",
             ),
+            DatasetSpec(
+                name="glove-100-angular",
+                url="https://ann-benchmarks.com/glove-100-angular.hdf5",
+                sha256="544af1d5e84e112cd4749571dcfd8ca109818a572f850af75a3a09e093a953c4",
+                directory_name="glove-100-angular",
+                archive="file",
+            ),
         )
     }
 )

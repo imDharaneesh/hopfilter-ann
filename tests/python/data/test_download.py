@@ -126,7 +126,9 @@ def test_http_fetcher_refuses_non_https(tmp_path: Path) -> None:
         HttpFetcher().fetch("http://example.invalid/data.zip", tmp_path / "data.zip")
 
 
-@pytest.mark.parametrize("name", ["movielens-1m", "movielens-25m", "sift-128-euclidean"])
+@pytest.mark.parametrize(
+    "name", ["movielens-1m", "movielens-25m", "sift-128-euclidean", "glove-100-angular"]
+)
 def test_registry_specs_are_https_with_full_sha256(name: str) -> None:
     spec = DATASETS[name]
 
