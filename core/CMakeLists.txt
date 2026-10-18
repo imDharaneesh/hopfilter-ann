@@ -47,6 +47,18 @@ hopfilter_add_module(search
         hopfilter::graph
 )
 
+hopfilter_add_module(index
+    SOURCES
+        src/index/hnsw_index.cpp
+        src/index/hnsw_index_builder.cpp
+    DEPENDS
+        hopfilter::common
+        hopfilter::distance
+        hopfilter::storage
+        hopfilter::graph
+        hopfilter::search
+)
+
 add_library(hopfilter_core INTERFACE)
 add_library(hopfilter::core ALIAS hopfilter_core)
 get_property(hopfilterModules GLOBAL PROPERTY HOPFILTER_MODULES)
