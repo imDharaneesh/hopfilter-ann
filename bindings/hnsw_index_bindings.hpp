@@ -5,5 +5,6 @@
 namespace hopfilter::bindings {
 
 void bindHnswIndex(pybind11::module_& module);
+void bindKernelSelection(pybind11::module_& module);
 
 }

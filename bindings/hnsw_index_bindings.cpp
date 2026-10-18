@@ -8,12 +8,16 @@
 #include <span>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
 
 #include <hopfilter/common/errors.hpp>
+#include <hopfilter/common/parallel.hpp>
+#include <hopfilter/distance/kernels.hpp>
 #include <hopfilter/index/hnsw_index.hpp>
 #include <hopfilter/index/hnsw_index_builder.hpp>
 #include <hopfilter/index/index_config.hpp>
@@ -60,51 +64,91 @@ std::span<const float> row(const FloatMatrix& matrix, py::ssize_t index, std::si
     return {matrix.data(index, 0), dimension};
 }
 
-IdMatrix addVectors(HnswIndex& index, const FloatMatrix& vectors) {
+IdMatrix addVectors(HnswIndex& index, const FloatMatrix& vectors, std::size_t threads) {
     requireMatrixOf(vectors, index.dimension(), "vectors");
-    const py::ssize_t count = vectors.shape(0);
-    IdMatrix ids(count);
-    auto output = ids.mutable_unchecked<1>();
+    const auto count = static_cast<std::size_t>(vectors.shape(0));
+    const std::span<const float> rows{vectors.data(), count * index.dimension()};
+    NodeId first = 0;
     {
         const py::gil_scoped_release release;
-        for (py::ssize_t position = 0; position < count; ++position) {
-            output(position) = index.insert(row(vectors, position, index.dimension()));
-        }
+        first = index.insertBatch(rows, threads);
+    }
+    IdMatrix ids(static_cast<py::ssize_t>(count));
+    auto output = ids.mutable_unchecked<1>();
+    for (std::size_t position = 0; position < count; ++position) {
+        output(static_cast<py::ssize_t>(position)) = first + static_cast<std::int64_t>(position);
     }
     return ids;
+}
+
+template <typename IdView, typename DistanceView>
+void writeRow(const SearchResults& results,
+              py::ssize_t query,
+              IdView& ids,
+              DistanceView& distances) {
+    for (py::ssize_t slot = 0; slot < ids.shape(1); ++slot) {
+        const auto position = static_cast<std::size_t>(slot);
+        const bool found = position < results.size();
+        ids(query, slot) = found ? results[position].id : kMissingId;
+        distances(query, slot) =
+            found ? results[position].distance : std::numeric_limits<float>::infinity();
+    }
 }
 
 py::tuple searchBatch(const HnswIndex& index,
                       const FloatMatrix& queries,
                       std::size_t k,
-                      std::size_t ef) {
+                      std::size_t ef,
+                      std::size_t threads) {
     requireMatrixOf(queries, index.dimension(), "queries");
     if (k == 0) {
         throw InvalidArgumentError("k must be positive");
     }
     const py::ssize_t count = queries.shape(0);
-    const auto width = static_cast<py::ssize_t>(k);
-    IdMatrix ids({count, width});
-    DistanceMatrix distances({count, width});
+    IdMatrix ids({count, static_cast<py::ssize_t>(k)});
+    DistanceMatrix distances({count, static_cast<py::ssize_t>(k)});
     auto idView = ids.mutable_unchecked<2>();
     auto distanceView = distances.mutable_unchecked<2>();
     {
         const py::gil_scoped_release release;
-        for (py::ssize_t query = 0; query < count; ++query) {
+        parallelFor(static_cast<std::size_t>(count), threads, [&](std::size_t position) {
+            const auto query = static_cast<py::ssize_t>(position);
             const auto results =
                 index.search(row(queries, query, index.dimension()), k, SearchRequest{ef});
-            for (py::ssize_t slot = 0; slot < width; ++slot) {
-                const bool found = static_cast<std::size_t>(slot) < results.size();
-                idView(query, slot) =
-                    found ? results[static_cast<std::size_t>(slot)].id : kMissingId;
-                distanceView(query, slot) = found ? results[static_cast<std::size_t>(slot)].distance
-                                                  : std::numeric_limits<float>::infinity();
-            }
-        }
+            writeRow(results, query, idView, distanceView);
+        });
     }
     return py::make_tuple(std::move(ids), std::move(distances));
 }
 
+KernelSet kernelSetNamed(const std::string& name) {
+    for (const KernelSet set : {KernelSet::Scalar, KernelSet::Avx2}) {
+        if (kernelSetName(set) == name) {
+            return set;
+        }
+    }
+    throw InvalidArgumentError("unknown kernel set '" + name + "'; known: scalar, avx2");
+}
+
+std::vector<std::string> availableKernelSets() {
+    std::vector<std::string> names;
+    for (const KernelSet set : {KernelSet::Scalar, KernelSet::Avx2}) {
+        if (isSupported(set)) {
+            names.emplace_back(kernelSetName(set));
+        }
+    }
+    return names;
+}
+
+}
+
+void bindKernelSelection(py::module_& module) {
+    module.def("simd_kernels", [] { return std::string{kernelSetName(activeKernels().set)}; });
+    module.def("available_simd_kernels", &availableKernelSets);
+    module.def(
+        "use_simd_kernels",
+        [](const std::string& name) { useKernelSet(kernelSetNamed(name)); },
+        py::arg("name"));
 }
 
 void bindHnswIndex(py::module_& module) {
@@ -116,12 +160,13 @@ void bindHnswIndex(py::module_& module) {
              py::arg("max_neighbors") = kDefaultMaxNeighbors,
              py::arg("ef_construction") = kDefaultEfConstruction,
              py::arg("seed") = kDefaultSeed)
-        .def("add", &addVectors, py::arg("vectors"))
+        .def("add", &addVectors, py::arg("vectors"), py::arg("threads") = 0)
         .def("search",
              &searchBatch,
              py::arg("queries"),
              py::arg("k"),
-             py::arg("ef") = kDefaultEfSearch)
+             py::arg("ef") = kDefaultEfSearch,
+             py::arg("threads") = 0)
         .def(
             "save",
             [](const HnswIndex& index, const std::filesystem::path& path) {

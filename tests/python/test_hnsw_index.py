@@ -6,7 +6,7 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from hopfilter import HnswIndex
+from hopfilter import HnswIndex, _core
 from hopfilter.errors import (
     HopfilterError,
     IndexStateError,
@@ -127,11 +127,44 @@ def test_zero_k_raises(l2_index: HnswIndex) -> None:
         l2_index.search(random_matrix(1, seed=7), 0)
 
 
-def test_adding_past_capacity_raises_index_state_error() -> None:
+def test_adding_past_capacity_raises_and_inserts_nothing() -> None:
     index = HnswIndex(DIMENSION, 2)
 
     with pytest.raises(IndexStateError, match="full"):
         index.add(random_matrix(3, seed=8))
+    assert len(index) == 0
+
+
+def test_parallel_add_and_search_match_recall_of_single_thread() -> None:
+    data, queries = random_matrix(POINTS, seed=21), random_matrix(100, seed=22)
+    parallel = HnswIndex(DIMENSION, POINTS, max_neighbors=12, ef_construction=100)
+
+    ids = parallel.add(data, threads=4)
+    found, _ = parallel.search(queries, K, ef=64, threads=4)
+    single_found, _ = parallel.search(queries, K, ef=64, threads=1)
+
+    assert ids.tolist() == list(range(POINTS))
+    np.testing.assert_array_equal(found, single_found)
+    truth = exact_top_k(data, queries, K, "l2")
+    recall = np.mean([len(set(f) & set(t)) / K for f, t in zip(found, truth, strict=True)])
+    assert recall >= 0.95
+
+
+def test_simd_kernel_selection_round_trips() -> None:
+    available = _core.available_simd_kernels()
+    original = _core.simd_kernels()
+
+    try:
+        for name in available:
+            _core.use_simd_kernels(name)
+            assert _core.simd_kernels() == name
+    finally:
+        _core.use_simd_kernels(original)
+
+    assert available[0] == "scalar"
+    assert original == available[-1]
+    with pytest.raises(InvalidArgumentError, match="unknown kernel set 'avx512'"):
+        _core.use_simd_kernels("avx512")
 
 
 def test_invalid_construction_raises() -> None:

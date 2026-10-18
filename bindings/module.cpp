@@ -13,4 +13,5 @@ PYBIND11_MODULE(_core, module) {
     module.attr("__version__") = std::string{hopfilter::version()};
     hopfilter::bindings::registerErrorTranslation();
     hopfilter::bindings::bindHnswIndex(module);
+    hopfilter::bindings::bindKernelSelection(module);
 }
