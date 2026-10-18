@@ -1,0 +1,55 @@
+{
+    "config": {
+        "dataset": "sift-128-euclidean",
+        "results_path": "benchmarks/results/optlog/7-build-all-threads.json",
+        "index_cache": "data/indexes/build-all-threads.hopf",
+        "data_dir": "data",
+        "max_neighbors": 16,
+        "ef_construction": 200,
+        "seed": 42,
+        "k": 10,
+        "ef_search": [
+            64
+        ],
+        "latency_queries": 1000,
+        "repeats": 3,
+        "build_threads": 0,
+        "search_threads": 0,
+        "kernels": "default"
+    },
+    "environment": {
+        "commit": "5dc22c0ce6ae494fab19f3219bd0d18c1ae53fdc",
+        "python": "3.14.3",
+        "platform": "Windows-11-10.0.26200-SP0",
+        "processor": "AMD64 Family 25 Model 68 Stepping 1, AuthenticAMD",
+        "logical_cpus": 16,
+        "memory_gib": 15.8,
+        "build_threads": 0,
+        "search_threads": 0,
+        "simd": "avx2"
+    },
+    "build": {
+        "seconds": 143.43033989996184,
+        "loaded_from_cache": false,
+        "threads": 0,
+        "rss_mebibytes": 1266.50390625
+    },
+    "sweep": [
+        {
+            "ef_search": 64,
+            "recall": 0.96344,
+            "qps_single_thread": {
+                "median": 2706.0655376724885,
+                "min": 2695.484922577918,
+                "max": 2719.911805194556
+            },
+            "qps_all_threads": {
+                "median": 18664.370203322116,
+                "min": 18623.649017475942,
+                "max": 18672.302216746222
+            },
+            "p50_ms": 0.3862,
+            "p99_ms": 0.5771639999999998
+        }
+    ]
+}
