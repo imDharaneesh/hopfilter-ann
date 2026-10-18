@@ -60,6 +60,8 @@ def _is_required(field: dataclasses.Field[object]) -> bool:
 
 
 def _coerce(value: object, expected: object, location: str) -> object:
+    if isinstance(expected, typing.TypeAliasType):
+        return _coerce(value, expected.__value__, location)
     if isinstance(expected, type) and dataclasses.is_dataclass(expected):
         return config_from_mapping(value, expected, location)
     origin = typing.get_origin(expected)

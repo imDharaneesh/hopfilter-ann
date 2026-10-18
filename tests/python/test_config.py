@@ -45,6 +45,23 @@ def test_converts_lists_to_tuples_and_ints_to_floats() -> None:
     assert isinstance(config.optimizer.learning_rate, float)
 
 
+type Color = Literal["red", "green"]
+
+
+@dataclass(frozen=True)
+class AliasedConfig:
+    colors: tuple[Color, ...]
+    primary: Color = "red"
+
+
+def test_resolves_type_aliases() -> None:
+    config = config_from_mapping({"colors": ["green", "red"], "primary": "green"}, AliasedConfig)
+
+    assert config == AliasedConfig(colors=("green", "red"), primary="green")
+    with pytest.raises(InvalidConfigError, match=r"config\.colors\[1\] must be one of"):
+        config_from_mapping({"colors": ["green", "blue"]}, AliasedConfig)
+
+
 def test_accepts_literal_choice() -> None:
     assert config_from_mapping({**VALID_RAW, "loss": "logq"}, ExampleConfig).loss == "logq"
 
