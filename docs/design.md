@@ -179,7 +179,7 @@ classDiagram
 
 - **Strategy.** Every metric returns a value where *smaller is closer*. Inner product returns `-dot(a, b)`, so search code never branches on the metric.
 - **Cosine** expects normalized vectors. `CosineMetric` normalizes on insert and query and then reuses the inner-product kernel. That is cheaper than normalizing inside every distance call.
-- **Runtime dispatch.** `DistanceKernels` holds function pointers resolved once from `CpuFeatures`. The AVX2/FMA kernels live in their own translation unit, which is the only one compiled with `-mavx2 -mfma` or `/arch:AVX2`. A wheel built this way runs on any x86-64 CPU and uses AVX2 only when the CPU has it.
+- **Runtime dispatch** (Phase 3). `DistanceKernels` is a pair of function pointers for one `KernelSet` (`Scalar` or `Avx2`). At startup the best set the CPU supports is chosen: `__builtin_cpu_supports` on GCC/Clang, `cpuid` plus `xgetbv` on MSVC, so the OS must also save the AVX registers. The AVX2/FMA kernels live in their own translation unit, the only one compiled with `-mavx2 -mfma` or `/arch:AVX2`, and only on x86-64. A wheel therefore runs on any CPU and uses AVX2 only where it exists. `useKernelSet` switches the active set at runtime (an atomic pointer), so benchmarks compare scalar and AVX2 in one binary; it throws `InvalidArgumentError` for an unsupported set.
 - **Open/closed.** New metrics register with `MetricRegistry` under a config name, without touching existing classes.
 - Virtual dispatch costs one indirect call per distance evaluation. Phase 3 measures it; if it shows up in profiles, the search loop is templated on the metric type, with the virtual interface kept for configuration.
 
@@ -459,7 +459,8 @@ All follow Malkov and Yashunin (arXiv:1603.09320). Only the shape is described h
 | Operation | Guarantee |
 |---|---|
 | `search` on a built index | Safe from any number of threads. Each query leases its own `VisitedSet` from a pool; only the lease and return take a short lock, the traversal itself takes none |
-| `insert` | Serialized by `insertMutex_` in v0.1. Phase 3 moves to per-node locks for parallel build |
+| `insert` / `insertBatch` | Ids, vectors and levels are assigned sequentially under a short allocation lock, so row *i* of a batch always gets id *i*. Linking then runs on `threads` workers. Neighbor lists are read and written under striped per-node locks (a copy is taken under the lock, never a reference). The entry point is read under a shared lock and replaced under an exclusive one, taken only by a node that lands above the current top level. Levels are deterministic for a given seed and order; with more than one thread the graph edges are not |
+| Batch search | `parallelFor` splits queries across threads; each query leases its own `VisitedSet` and reads the graph without locks |
 | `search` concurrent with `insert` | Not supported in v0.1. Documented, and asserted in debug builds |
 | `save` | Safe concurrently with `search`; not with `insert` |
 | Python | The GIL is released inside `search` and batch `insert`, so Python threads scale |
@@ -764,3 +765,6 @@ classDiagram
 | 15 | 2026-10-18 | Heuristic keeps ties and collapses exact duplicates into one slot | Measured on 80 points including 30 copies: pruning ties left 9 nodes reachable, keeping all ties trapped searches inside the copies. Collapsing copies keeps every distinct node reachable |
 | 16 | 2026-10-18 | Level generator built from raw `mt19937_64` bits | `std::uniform_real_distribution` differs between standard libraries; raw bits give the same graph for the same seed on MSVC, libstdc++ and libc++ |
 | 17 | 2026-10-18 | No `Serializable` interface on `HnswIndex` | `io` depends on `index`; `IndexSerializer` owns the format so the index stays unaware of it |
+| 18 | 2026-10-18 | Striped node locks (65,536 mutexes) instead of one mutex per node | A `std::mutex` is 80 bytes on MSVC, so one per node would cost 80 MB at 1M nodes; stripes cost 5 MB and two nodes rarely share a stripe |
+| 19 | 2026-10-18 | Parallel build assigns ids before linking | Callers rely on row *i* becoming id *i*; assigning ids in whatever order threads finish would break that |
+| 20 | 2026-10-18 | Comparison libraries live in a `compare` dependency group, outside `dev` | hnswlib only ships a source distribution and compiles on install; keeping it out of the default environment keeps `uv sync` and CI fast |
