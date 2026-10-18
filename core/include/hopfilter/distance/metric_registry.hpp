@@ -1,10 +1,10 @@
 #pragma once
 
 #include <functional>
-#include <map>
 #include <memory>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include <hopfilter/distance/distance_metric.hpp>
@@ -29,7 +29,9 @@ public:
     [[nodiscard]] std::vector<std::string> names() const;
 
 private:
-    std::map<std::string, Factory, std::less<>> factories_;
+    using Entry = std::pair<std::string, Factory>;
+
+    std::vector<Entry> factories_;
 };
 
 }

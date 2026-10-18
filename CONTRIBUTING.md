@@ -53,7 +53,7 @@ C++ naming is enforced by clang-tidy:
 |---|---|---|
 | Types | `PascalCase` | `HnswGraph` |
 | Functions, methods, variables, parameters | `camelCase` | `selectNeighbors`, `entryPoint` |
-| Private and protected members | `snake_case_` | `entry_point_` |
+| Private and protected members | `camelCase_` | `entryPoint_` |
 | Constants | `kPascalCase` | `kDefaultEfSearch` |
 | Namespaces | `lower_case` | `hopfilter` |
 

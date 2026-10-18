@@ -18,6 +18,31 @@ namespace hopfilter {
     return std::max<std::size_t>(1, std::thread::hardware_concurrency());
 }
 
+/// Keeps the first exception thrown by any worker of a parallel loop.
+class FirstError {
+public:
+    void capture() noexcept {
+        const std::scoped_lock lock{mutex_};
+        if (!error_) {
+            error_ = std::current_exception();
+        }
+        failed_ = true;
+    }
+
+    [[nodiscard]] bool failed() const noexcept { return failed_; }
+
+    void rethrowIfAny() const {
+        if (error_) {
+            std::rethrow_exception(error_);
+        }
+    }
+
+private:
+    std::mutex mutex_;
+    std::exception_ptr error_;
+    std::atomic<bool> failed_{false};
+};
+
 /// Calls ``body(index)`` for every index in ``[0, count)`` on up to ``threads`` threads
 /// (0 = all cores). Indices are handed out dynamically, so uneven work balances itself.
 /// The first exception thrown by any call stops new work and is rethrown here once all
@@ -25,37 +50,26 @@ namespace hopfilter {
 template <typename Body>
 void parallelFor(std::size_t count, std::size_t threads, const Body& body) {
     const std::size_t workers = std::min(resolveThreadCount(threads), count);
-    if (workers <= 1) {
-        for (std::size_t index = 0; index < count; ++index) {
-            body(index);
-        }
-        return;
-    }
     std::atomic<std::size_t> next{0};
-    std::atomic<bool> failed{false};
-    std::exception_ptr firstError;
-    std::mutex errorMutex;
+    FirstError errors;
     const auto work = [&] {
-        for (std::size_t index = next++; index < count && !failed; index = next++) {
+        for (std::size_t index = next++; index < count && !errors.failed(); index = next++) {
             try {
                 body(index);
             } catch (...) {
-                const std::scoped_lock lock{errorMutex};
-                firstError = firstError ? firstError : std::current_exception();
-                failed = true;
+                errors.capture();
             }
         }
     };
-    std::vector<std::jthread> pool;
-    pool.reserve(workers - 1);
-    for (std::size_t worker = 1; worker < workers; ++worker) {
-        pool.emplace_back(work);
+    {
+        std::vector<std::jthread> pool;
+        pool.reserve(workers > 0 ? workers - 1 : 0);
+        for (std::size_t worker = 1; worker < workers; ++worker) {
+            pool.emplace_back(work);
+        }
+        work();
     }
-    work();
-    pool.clear();
-    if (firstError) {
-        std::rethrow_exception(firstError);
-    }
+    errors.rethrowIfAny();
 }
 
 }

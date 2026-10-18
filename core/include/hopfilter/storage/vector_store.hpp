@@ -47,7 +47,7 @@ private:
     std::size_t stride_;
     std::size_t capacity_;
     std::size_t size_ = 0;
-    std::unique_ptr<float[], AlignedDeleter> data_;
+    std::unique_ptr<float, AlignedDeleter> data_;
 };
 
 }

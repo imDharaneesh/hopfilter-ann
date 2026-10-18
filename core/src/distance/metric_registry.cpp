@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -38,14 +39,15 @@ void MetricRegistry::registerMetric(std::string name, Factory factory) {
     if (name.empty() || !factory) {
         throw InvalidArgumentError("metric name and factory must be non-empty");
     }
-    if (factories_.contains(name)) {
+    const auto position = std::ranges::lower_bound(factories_, name, {}, &Entry::first);
+    if (position != factories_.end() && position->first == name) {
         throw InvalidArgumentError("metric '" + name + "' is already registered");
     }
-    factories_.emplace(std::move(name), std::move(factory));
+    factories_.emplace(position, std::move(name), std::move(factory));
 }
 
 std::unique_ptr<DistanceMetric> MetricRegistry::create(std::string_view name) const {
-    const auto found = factories_.find(name);
+    const auto found = std::ranges::find(factories_, name, &Entry::first);
     if (found == factories_.end()) {
         throw InvalidArgumentError("unknown metric '" + std::string{name} +
                                    "'; known metrics: " + joined(names()));

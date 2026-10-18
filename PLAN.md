@@ -66,7 +66,7 @@ IVF-PQ, multimodal embeddings, distributed sharding, GPU. The ranking stage is a
     | Types | `PascalCase` | `PascalCase` |
     | Functions and methods | `camelCase` | `snake_case` |
     | Variables and parameters | `camelCase` | `snake_case` |
-    | Private members | `snake_case_` | `_snake_case` |
+    | Private members | `camelCase_` | `_snake_case` |
     | Constants | `kPascalCase` | `UPPER_SNAKE_CASE` |
     | Namespaces and modules | `lower_case` | `lower_case` |
 
