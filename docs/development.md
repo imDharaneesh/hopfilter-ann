@@ -82,6 +82,12 @@ ctest --test-dir build -C Release --output-on-failure
 
 GoogleTest is downloaded by CMake on the first configure.
 
+`tests/fixtures/index_format_v1.hopf` is an index saved in format version 1, and the test suite checks that it still loads. Regenerate it only when you deliberately start a new format version:
+
+```bash
+build/tests/cpp/Release/hopfilter_core_tests --gtest_also_run_disabled_tests --gtest_filter=*WriteVersionOneFixture
+```
+
 ### CMake options
 
 | Option | Default | Effect |
