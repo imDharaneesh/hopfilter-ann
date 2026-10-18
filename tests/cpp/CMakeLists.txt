@@ -15,7 +15,10 @@ include(GoogleTest)
 add_executable(hopfilter_core_tests
     common/types_test.cpp
     common/version_test.cpp
+    distance/kernels_test.cpp
+    distance/metrics_test.cpp
 )
+target_include_directories(hopfilter_core_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(hopfilter_core_tests PRIVATE hopfilter::core GTest::gtest_main)
 target_compile_definitions(hopfilter_core_tests
