@@ -1,0 +1,128 @@
+{
+    "config": {
+        "dataset": "sift-128-euclidean",
+        "results_path": "benchmarks/results/ann_sift1m.json",
+        "index_cache": "data/indexes/sift-128-euclidean-M16-efc200.hopf",
+        "data_dir": "data",
+        "max_neighbors": 16,
+        "ef_construction": 200,
+        "seed": 42,
+        "k": 10,
+        "ef_search": [
+            10,
+            16,
+            24,
+            32,
+            48,
+            64,
+            96,
+            128,
+            192,
+            256,
+            384,
+            512
+        ],
+        "latency_queries": 1000
+    },
+    "environment": {
+        "commit": "61219e33cda9c4ca673a8fcc77e329a04a28bd20",
+        "python": "3.14.3",
+        "platform": "Windows-11-10.0.26200-SP0",
+        "processor": "AMD64 Family 25 Model 68 Stepping 1, AuthenticAMD",
+        "logical_cpus": 16,
+        "memory_gib": 15.8,
+        "threads_used": 1,
+        "simd": "none (scalar kernels, phase 2)"
+    },
+    "build": {
+        "seconds": 1308.9220227000187,
+        "loaded_from_cache": false,
+        "rss_mebibytes": 1199.28515625
+    },
+    "sweep": [
+        {
+            "ef_search": 10,
+            "recall": 0.7104199999999999,
+            "qps": 5381.75940910411,
+            "p50_ms": 0.1945,
+            "p99_ms": 0.36052399999999996
+        },
+        {
+            "ef_search": 16,
+            "recall": 0.8020799999999999,
+            "qps": 4519.49599843658,
+            "p50_ms": 0.21455000000000002,
+            "p99_ms": 0.48067499999999996
+        },
+        {
+            "ef_search": 24,
+            "recall": 0.86596,
+            "qps": 3743.4996000855604,
+            "p50_ms": 0.2691,
+            "p99_ms": 0.5264159999999998
+        },
+        {
+            "ef_search": 32,
+            "recall": 0.9037200000000001,
+            "qps": 3064.992804629742,
+            "p50_ms": 0.33265,
+            "p99_ms": 0.6111119999999999
+        },
+        {
+            "ef_search": 48,
+            "recall": 0.9436199999999999,
+            "qps": 2275.427170510574,
+            "p50_ms": 0.4562,
+            "p99_ms": 0.8419009999999999
+        },
+        {
+            "ef_search": 64,
+            "recall": 0.96359,
+            "qps": 1766.748617879728,
+            "p50_ms": 0.63835,
+            "p99_ms": 1.0205649999999995
+        },
+        {
+            "ef_search": 96,
+            "recall": 0.9816,
+            "qps": 1301.8859823341186,
+            "p50_ms": 0.787,
+            "p99_ms": 1.2631559999999997
+        },
+        {
+            "ef_search": 128,
+            "recall": 0.98949,
+            "qps": 1052.0232990786824,
+            "p50_ms": 1.0070999999999999,
+            "p99_ms": 1.5699319999999994
+        },
+        {
+            "ef_search": 192,
+            "recall": 0.9952799999999999,
+            "qps": 737.0832897807752,
+            "p50_ms": 1.3903500000000002,
+            "p99_ms": 2.230172
+        },
+        {
+            "ef_search": 256,
+            "recall": 0.99732,
+            "qps": 584.7868712943058,
+            "p50_ms": 1.854,
+            "p99_ms": 2.8858219999999997
+        },
+        {
+            "ef_search": 384,
+            "recall": 0.99868,
+            "qps": 410.24198993481184,
+            "p50_ms": 2.5149999999999997,
+            "p99_ms": 3.6455489999999995
+        },
+        {
+            "ef_search": 512,
+            "recall": 0.99908,
+            "qps": 329.7954450018801,
+            "p50_ms": 3.22715,
+            "p99_ms": 5.004581
+        }
+    ]
+}
