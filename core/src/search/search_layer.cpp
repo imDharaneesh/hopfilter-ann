@@ -51,8 +51,19 @@ public:
     }
 
 private:
+    std::span<const NodeId> neighborsOf(NodeId node, LevelIndex level) {
+        const NodeLocks* locks = context_->locks();
+        if (locks == nullptr) {
+            return context_->graph().neighbors(node, level);
+        }
+        const auto guard = locks->lock(node);
+        const auto current = context_->graph().neighbors(node, level);
+        neighborBuffer_.assign(current.begin(), current.end());
+        return neighborBuffer_;
+    }
+
     void expand(NodeId node, LevelIndex level) {
-        const auto neighbors = context_->graph().neighbors(node, level);
+        const auto neighbors = neighborsOf(node, level);
         for (std::size_t position = 0; position < neighbors.size(); ++position) {
             if (position + 1 < neighbors.size()) {
                 context_->distances().prefetch(neighbors[position + 1]);
@@ -93,6 +104,7 @@ private:
     std::size_t ef_;
     std::vector<Neighbor> candidates_;
     std::vector<Neighbor> results_;
+    std::vector<NodeId> neighborBuffer_;
 };
 
 }

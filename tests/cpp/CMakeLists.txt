@@ -22,6 +22,7 @@ add_executable(hopfilter_core_tests
     graph/hnsw_graph_test.cpp
     graph/layer_assigner_test.cpp
     graph/neighbor_selector_test.cpp
+    graph/node_locks_test.cpp
     index/hnsw_index_builder_test.cpp
     index/hnsw_index_test.cpp
     index/hnsw_recall_test.cpp

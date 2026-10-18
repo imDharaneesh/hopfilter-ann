@@ -44,19 +44,19 @@ HnswGraph::HnswGraph(std::size_t capacity,
     : capacity_((validateShape(capacity, maxNeighborsLevelZero, maxNeighborsUpper), capacity)),
       maxNeighborsLevelZero_(maxNeighborsLevelZero),
       maxNeighborsUpper_(maxNeighborsUpper),
-      levelZeroLinks_(capacity * (maxNeighborsLevelZero + kCountSlots), 0) {
-    upperLinks_.reserve(capacity);
-    levels_.reserve(capacity);
-}
+      levelZeroLinks_(capacity * (maxNeighborsLevelZero + kCountSlots), 0),
+      upperLinks_(capacity),
+      levels_(capacity, 0) {}
 
 NodeId HnswGraph::addNode(LevelIndex level) {
-    if (size() == capacity_) {
+    const std::size_t id = size();
+    if (id == capacity_) {
         throw IndexStateError("graph is full (capacity " + std::to_string(capacity_) + ")");
     }
-    levels_.push_back(level);
-    upperLinks_.emplace_back(static_cast<std::size_t>(level) * (maxNeighborsUpper_ + kCountSlots),
-                             0);
-    return static_cast<NodeId>(size() - 1);
+    levels_[id] = level;
+    upperLinks_[id].assign(static_cast<std::size_t>(level) * (maxNeighborsUpper_ + kCountSlots), 0);
+    size_.store(id + 1, std::memory_order_release);
+    return static_cast<NodeId>(id);
 }
 
 std::span<const NodeId> HnswGraph::neighbors(NodeId id, LevelIndex level) const noexcept {

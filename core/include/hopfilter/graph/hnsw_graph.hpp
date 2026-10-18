@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <cstddef>
 #include <optional>
 #include <span>
@@ -14,8 +15,10 @@ namespace hopfilter {
 /// Level 0 holds most edges and is read on every query, so it lives in one flat,
 /// preallocated array with ``maxNeighborsLevelZero + 1`` slots per node (a count
 /// followed by ids). Upper levels hold few nodes and use one small vector per node.
-/// Node ids are dense: the n-th added node has id n. Reads are thread-safe while no
-/// thread is writing; writers must be serialized by the caller.
+/// Node ids are dense: the n-th added node has id n. All per-node storage is allocated up
+/// front, so adding a node never moves another node's data. `addNode` calls must be
+/// serialized; reads and writes of different nodes' neighbor lists may run concurrently
+/// as long as each node is guarded, e.g. with NodeLocks.
 class HnswGraph {
 public:
     /// Throws InvalidArgumentError if any argument is zero or ``capacity`` does not
@@ -41,7 +44,9 @@ public:
     [[nodiscard]] std::optional<NodeId> entryPoint() const noexcept { return entryPoint_; }
     [[nodiscard]] LevelIndex maxLevel() const noexcept { return maxLevel_; }
     [[nodiscard]] LevelIndex levelOf(NodeId id) const noexcept { return levels_[id]; }
-    [[nodiscard]] std::size_t size() const noexcept { return levels_.size(); }
+    [[nodiscard]] std::size_t size() const noexcept {
+        return size_.load(std::memory_order_acquire);
+    }
     [[nodiscard]] std::size_t capacity() const noexcept { return capacity_; }
 
     /// Degree bound on ``level``: ``maxNeighborsLevelZero`` on level 0, else ``maxNeighborsUpper``.
@@ -57,6 +62,7 @@ private:
     std::vector<NodeId> levelZeroLinks_;
     std::vector<std::vector<NodeId>> upperLinks_;
     std::vector<LevelIndex> levels_;
+    std::atomic<std::size_t> size_{0};
     std::optional<NodeId> entryPoint_;
     LevelIndex maxLevel_ = 0;
 };

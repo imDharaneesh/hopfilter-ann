@@ -10,6 +10,7 @@
 #include <hopfilter/distance/metrics.hpp>
 #include <hopfilter/graph/hnsw_graph.hpp>
 #include <hopfilter/graph/node_distances.hpp>
+#include <hopfilter/graph/node_locks.hpp>
 #include <hopfilter/search/search_context.hpp>
 #include <hopfilter/search/search_layer.hpp>
 #include <hopfilter/search/search_strategy.hpp>
@@ -136,6 +137,18 @@ TEST_F(LineGraphTest, UnfilteredStrategyWidensEfToAtLeastK) {
     const auto results = UnfilteredStrategy{}.search(context(), query, kPoints, SearchRequest{1});
 
     EXPECT_EQ(results.size(), kPoints);
+}
+
+TEST_F(LineGraphTest, LockedTraversalReturnsTheSameResults) {
+    const NodeLocks locks{8};
+    VisitedSet visited{kPoints};
+    const SearchContext locked{context().graph(), context().distances(), visited, &locks};
+    const std::vector<float> query{6.6F};
+
+    const auto plain = UnfilteredStrategy{}.search(context(), query, 4, SearchRequest{8});
+    const auto guarded = UnfilteredStrategy{}.search(locked, query, 4, SearchRequest{8});
+
+    EXPECT_EQ(guarded, plain);
 }
 
 TEST_F(LineGraphTest, ZeroKReturnsNothing) {
