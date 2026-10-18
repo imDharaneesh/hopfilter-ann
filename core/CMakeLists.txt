@@ -31,8 +31,11 @@ hopfilter_add_module(graph
     SOURCES
         src/graph/hnsw_graph.cpp
         src/graph/layer_assigner.cpp
+        src/graph/neighbor_selector.cpp
     DEPENDS
         hopfilter::common
+        hopfilter::distance
+        hopfilter::storage
 )
 
 add_library(hopfilter_core INTERFACE)

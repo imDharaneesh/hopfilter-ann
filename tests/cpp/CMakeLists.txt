@@ -20,6 +20,7 @@ add_executable(hopfilter_core_tests
     distance/metrics_test.cpp
     graph/hnsw_graph_test.cpp
     graph/layer_assigner_test.cpp
+    graph/neighbor_selector_test.cpp
     storage/vector_store_test.cpp
 )
 target_include_directories(hopfilter_core_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
