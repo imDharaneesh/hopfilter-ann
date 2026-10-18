@@ -1,7 +1,9 @@
 """Build an HNSW index on an ANN-Benchmarks dataset and sweep efSearch.
 
-Records recall@k against the dataset's ground truth, single-thread QPS, per-query
-p50/p99 latency, build time and resident memory.
+Records recall@k against the dataset's ground truth, single-thread and all-thread QPS
+(median of several repeats), per-query p50/p99 latency, build time and resident memory.
+Works against older builds of hopfilter too: options a build does not support are
+recorded as unavailable instead of failing.
 
 Usage:
     uv run python benchmarks/runners/ann_recall.py --config benchmarks/configs/sift1m.yaml
@@ -10,9 +12,11 @@ Usage:
 import argparse
 import json
 import platform
+import statistics
 import subprocess
 import time
-from dataclasses import asdict, dataclass
+from collections.abc import Callable
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Literal
 
@@ -20,7 +24,7 @@ import numpy as np
 import numpy.typing as npt
 import psutil
 
-from hopfilter import HnswIndex
+from hopfilter import HnswIndex, _core
 from hopfilter.config import load_config
 from hopfilter.data.ann_benchmarks import AnnBenchmarkDataset, load_ann_benchmark
 from hopfilter.data.download import DATASETS, DatasetDownloader, HttpFetcher
@@ -29,6 +33,9 @@ INSERT_CHUNK = 50_000
 BYTES_PER_MEBIBYTE = 1 << 20
 NANOSECONDS_PER_MILLISECOND = 1e6
 LATENCY_PERCENTILES = (50, 99)
+UNAVAILABLE = "unavailable in this build"
+
+type SearchResult = tuple[npt.NDArray[np.int64], npt.NDArray[np.float32]]
 
 
 @dataclass(frozen=True)
@@ -43,12 +50,27 @@ class AnnRecallConfig:
     k: int = 10
     ef_search: tuple[int, ...] = (10, 32, 64, 128, 256)
     latency_queries: int = 1000
+    repeats: int = 5
+    build_threads: int = 1
+    search_threads: int = 0
+    kernels: Literal["default", "scalar", "avx2"] = "default"
+
+
+@dataclass(frozen=True)
+class SweepRow:
+    ef_search: int
+    recall: float
+    qps_single_thread: dict[str, float]
+    qps_all_threads: dict[str, float]
+    p50_ms: float
+    p99_ms: float
 
 
 @dataclass(frozen=True)
 class BuildReport:
     seconds: float | None
     loaded_from_cache: bool
+    threads: int | str
     rss_mebibytes: float
 
 
@@ -58,13 +80,19 @@ def load_dataset(config: AnnRecallConfig) -> AnnBenchmarkDataset:
     return load_ann_benchmark(dataset_dir / spec.file_name)
 
 
+def with_threads[Result](call: Callable[..., Result], threads: int, *args: object) -> Result:
+    try:
+        return call(*args, threads=threads)
+    except TypeError:
+        return call(*args)
+
+
 def build_or_load(
     config: AnnRecallConfig, dataset: AnnBenchmarkDataset
 ) -> tuple[HnswIndex, BuildReport]:
     cache = Path(config.index_cache)
     if cache.is_file():
-        index = HnswIndex.load(cache)
-        return index, BuildReport(None, True, resident_mebibytes())
+        return HnswIndex.load(cache), BuildReport(None, True, "n/a", resident_mebibytes())
     index = HnswIndex(
         dataset.train.shape[1],
         len(dataset.train),
@@ -75,12 +103,12 @@ def build_or_load(
     )
     started = time.perf_counter()
     for start in range(0, len(dataset.train), INSERT_CHUNK):
-        index.add(dataset.train[start : start + INSERT_CHUNK])
+        with_threads(index.add, config.build_threads, dataset.train[start : start + INSERT_CHUNK])
         print(f"  inserted {len(index):>9,} ({time.perf_counter() - started:7.1f}s)", flush=True)
     seconds = time.perf_counter() - started
     cache.parent.mkdir(parents=True, exist_ok=True)
     index.save(cache)
-    return index, BuildReport(seconds, False, resident_mebibytes())
+    return index, BuildReport(seconds, False, config.build_threads, resident_mebibytes())
 
 
 def resident_mebibytes() -> float:
@@ -95,35 +123,62 @@ def recall_at_k(found: npt.NDArray[np.int64], truth: npt.NDArray[np.int64], k: i
     return float(np.mean(hits)) / k
 
 
+def timed_qps(search: Callable[[], SearchResult], queries: int, repeats: int) -> dict[str, float]:
+    rates = []
+    for _ in range(repeats):
+        started = time.perf_counter()
+        search()
+        rates.append(queries / (time.perf_counter() - started))
+    return {"median": statistics.median(rates), "min": min(rates), "max": max(rates)}
+
+
 def latency_milliseconds(
     index: HnswIndex, queries: npt.NDArray[np.float32], k: int, ef: int
 ) -> list[float]:
     samples = []
     for query in queries:
         started = time.perf_counter_ns()
-        index.search(query[np.newaxis, :], k, ef)
+        with_threads(index.search, 1, query[np.newaxis, :], k, ef)
         samples.append((time.perf_counter_ns() - started) / NANOSECONDS_PER_MILLISECOND)
     return samples
 
 
 def measure(
     index: HnswIndex, dataset: AnnBenchmarkDataset, config: AnnRecallConfig, ef: int
-) -> dict[str, float]:
-    started = time.perf_counter()
-    found, _ = index.search(dataset.test, config.k, ef)
-    seconds = time.perf_counter() - started
-    latencies = latency_milliseconds(index, dataset.test[: config.latency_queries], config.k, ef)
+) -> SweepRow:
+    queries = dataset.test
+    found, _ = with_threads(index.search, 1, queries, config.k, ef)
+    single = timed_qps(
+        lambda: with_threads(index.search, 1, queries, config.k, ef), len(queries), config.repeats
+    )
+    parallel = timed_qps(
+        lambda: with_threads(index.search, config.search_threads, queries, config.k, ef),
+        len(queries),
+        config.repeats,
+    )
+    latencies = latency_milliseconds(index, queries[: config.latency_queries], config.k, ef)
     p50, p99 = np.percentile(latencies, LATENCY_PERCENTILES)
-    return {
-        "ef_search": ef,
-        "recall": recall_at_k(found, dataset.neighbors, config.k),
-        "qps": len(dataset.test) / seconds,
-        "p50_ms": float(p50),
-        "p99_ms": float(p99),
-    }
+    return SweepRow(
+        ef_search=ef,
+        recall=recall_at_k(found, dataset.neighbors, config.k),
+        qps_single_thread=single,
+        qps_all_threads=parallel,
+        p50_ms=float(p50),
+        p99_ms=float(p99),
+    )
 
 
-def environment() -> dict[str, object]:
+def select_kernels(kernels: str) -> str:
+    use = getattr(_core, "use_simd_kernels", None)
+    if kernels != "default":
+        if use is None:
+            raise SystemExit(f"kernel set '{kernels}' requested but this build cannot switch")
+        use(kernels)
+    active = getattr(_core, "simd_kernels", None)
+    return str(active()) if active is not None else UNAVAILABLE
+
+
+def environment(config: AnnRecallConfig, kernels: str) -> dict[str, object]:
     commit = subprocess.run(
         ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=False
     ).stdout.strip()
@@ -134,33 +189,43 @@ def environment() -> dict[str, object]:
         "processor": platform.processor(),
         "logical_cpus": psutil.cpu_count(logical=True),
         "memory_gib": round(psutil.virtual_memory().total / (1 << 30), 1),
-        "threads_used": 1,
-        "simd": "none (scalar kernels, phase 2)",
+        "build_threads": config.build_threads,
+        "search_threads": config.search_threads,
+        "simd": kernels,
     }
+
+
+def report(row: SweepRow, k: int) -> str:
+    return (
+        f"  ef={row.ef_search:>4}  recall@{k}={row.recall:.4f}"
+        f"  qps(1)={row.qps_single_thread['median']:8.0f}"
+        f"  qps(all)={row.qps_all_threads['median']:8.0f}"
+        f"  p50={row.p50_ms:.3f}ms  p99={row.p99_ms:.3f}ms"
+    )
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, required=True)
-    config = load_config(parser.parse_args().config, AnnRecallConfig)
+    parser.add_argument("--output", type=Path, help="override results_path from the config")
+    arguments = parser.parse_args()
+    config = load_config(arguments.config, AnnRecallConfig)
+    if arguments.output is not None:
+        config = replace(config, results_path=str(arguments.output))
+    kernels = select_kernels(config.kernels)
     dataset = load_dataset(config)
-    print(f"{config.dataset}: train {dataset.train.shape}, test {dataset.test.shape}", flush=True)
+    print(f"{config.dataset}: train {dataset.train.shape}, kernels {kernels}", flush=True)
     index, build = build_or_load(config, dataset)
     print(f"build: {build}", flush=True)
     sweep = []
     for ef in config.ef_search:
         sweep.append(measure(index, dataset, config, ef))
-        row = sweep[-1]
-        print(
-            f"  ef={ef:>4}  recall@{config.k}={row['recall']:.4f}  qps={row['qps']:8.0f}"
-            f"  p50={row['p50_ms']:.3f}ms  p99={row['p99_ms']:.3f}ms",
-            flush=True,
-        )
+        print(report(sweep[-1], config.k), flush=True)
     results = {
         "config": asdict(config),
-        "environment": environment(),
+        "environment": environment(config, kernels),
         "build": asdict(build),
-        "sweep": sweep,
+        "sweep": [asdict(row) for row in sweep],
     }
     output = Path(config.results_path)
     output.parent.mkdir(parents=True, exist_ok=True)

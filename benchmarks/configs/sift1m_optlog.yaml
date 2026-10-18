@@ -1,0 +1,13 @@
+dataset: sift-128-euclidean
+data_dir: data
+max_neighbors: 16
+ef_construction: 200
+seed: 42
+k: 10
+ef_search: [64]
+latency_queries: 1000
+repeats: 5
+build_threads: 1
+search_threads: 0
+index_cache: data/indexes/sift-128-euclidean-M16-efc200.hopf
+results_path: benchmarks/results/optlog/sift1m_ef64.json
