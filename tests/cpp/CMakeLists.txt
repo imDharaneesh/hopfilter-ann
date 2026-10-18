@@ -15,6 +15,7 @@ include(GoogleTest)
 add_executable(hopfilter_core_tests
     common/types_test.cpp
     common/version_test.cpp
+    common/visited_set_test.cpp
     distance/kernels_test.cpp
     distance/metrics_test.cpp
     storage/vector_store_test.cpp

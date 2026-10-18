@@ -1,6 +1,11 @@
+find_package(Threads REQUIRED)
+
 hopfilter_add_module(common
     SOURCES
         src/common/version.cpp
+        src/common/visited_set.cpp
+    DEPENDS
+        Threads::Threads
 )
 set_source_files_properties(src/common/version.cpp
     PROPERTIES COMPILE_DEFINITIONS "HOPFILTER_VERSION=\"${PROJECT_VERSION}\""
