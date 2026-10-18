@@ -79,7 +79,7 @@ minimum-version = "build-system.requires"
 cmake.version = ">=3.24"
 build-dir = "build/{wheel_tag}"
 wheel.packages = ["python/hopfilter"]
-sdist.exclude = ["data", "benchmarks/results", ".github"]
+sdist.exclude = ["/data", "/benchmarks/results", "/.github"]
 
 [tool.scikit-build.cmake.define]
 HOPFILTER_BUILD_PYTHON = "ON"
