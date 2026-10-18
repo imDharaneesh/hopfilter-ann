@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <span>
 
+#include <hopfilter/common/prefetch.hpp>
 #include <hopfilter/common/types.hpp>
 #include <hopfilter/distance/distance_metric.hpp>
 #include <hopfilter/storage/vector_store.hpp>
@@ -23,6 +24,9 @@ public:
     [[nodiscard]] float toQuery(std::span<const float> query, NodeId id) const noexcept {
         return metric_->distance(query, vectors_->at(id));
     }
+
+    /// Starts loading the vector of ``id`` into cache ahead of a distance computation.
+    void prefetch(NodeId id) const noexcept { prefetchForRead(vectors_->at(id).data()); }
 
     /// Whether two stored vectors are bit-for-bit equal; stops at the first difference.
     [[nodiscard]] bool identical(NodeId lhs, NodeId rhs) const noexcept {

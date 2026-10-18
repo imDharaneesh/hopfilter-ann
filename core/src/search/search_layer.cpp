@@ -52,14 +52,22 @@ public:
 
 private:
     void expand(NodeId node, LevelIndex level) {
-        for (const NodeId neighbor : context_->graph().neighbors(node, level)) {
-            if (!context_->visited().markVisited(neighbor)) {
-                continue;
+        const auto neighbors = context_->graph().neighbors(node, level);
+        for (std::size_t position = 0; position < neighbors.size(); ++position) {
+            if (position + 1 < neighbors.size()) {
+                context_->distances().prefetch(neighbors[position + 1]);
             }
-            const float distance = context_->distances().toQuery(query_, neighbor);
-            if (!isFull() || !worseThanWorstResult(distance)) {
-                offer({neighbor, distance});
-            }
+            visit(neighbors[position]);
+        }
+    }
+
+    void visit(NodeId neighbor) {
+        if (!context_->visited().markVisited(neighbor)) {
+            return;
+        }
+        const float distance = context_->distances().toQuery(query_, neighbor);
+        if (!isFull() || !worseThanWorstResult(distance)) {
+            offer({neighbor, distance});
         }
     }
 
