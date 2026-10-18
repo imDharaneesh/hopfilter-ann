@@ -1,12 +1,15 @@
 #include <algorithm>
 #include <cstddef>
 #include <mutex>
+#include <optional>
+#include <shared_mutex>
 #include <span>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include <hopfilter/common/errors.hpp>
+#include <hopfilter/common/parallel.hpp>
 #include <hopfilter/common/types.hpp>
 #include <hopfilter/index/hnsw_index.hpp>
 #include <hopfilter/search/search_context.hpp>
@@ -27,21 +30,16 @@ HnswIndex::HnswIndex(HnswIndexParts parts)
 
 NodeId HnswIndex::insert(std::span<const float> vector) {
     validateDimension(vector);
-    const auto stored = prepared(vector);
-    const std::scoped_lock lock{insertMutex_};
-    const NodeId id = vectors_->append(stored);
-    const LevelIndex level = layerAssigner_->nextLevel();
-    static_cast<void>(graph_->addNode(level));
-    const auto entryPoint = graph_->entryPoint();
-    if (!entryPoint) {
-        graph_->setEntryPoint(id);
-        return id;
-    }
-    link(id, level, *entryPoint);
-    if (level > graph_->maxLevel()) {
-        graph_->setEntryPoint(id);
-    }
-    return id;
+    return insertBatch(vector, 1);
+}
+
+NodeId HnswIndex::insertBatch(std::span<const float> rows, std::size_t threads) {
+    const NodeId first = allocate(rows);
+    const std::size_t count = rows.size() / config_.dimension;
+    parallelFor(count, threads, [this, first](std::size_t offset) {
+        linkNode(static_cast<NodeId>(first + offset));
+    });
+    return first;
 }
 
 SearchResults HnswIndex::search(std::span<const float> query,
@@ -70,44 +68,107 @@ std::vector<float> HnswIndex::prepared(std::span<const float> vector) const {
     return copy;
 }
 
-void HnswIndex::link(NodeId id, LevelIndex level, NodeId entryPoint) {
-    const auto vector = vectors_->at(id);
+NodeId HnswIndex::allocate(std::span<const float> rows) {
+    if (rows.size() % config_.dimension != 0) {
+        throw InvalidArgumentError("batch size " + std::to_string(rows.size()) +
+                                   " is not a multiple of dimension " +
+                                   std::to_string(config_.dimension));
+    }
+    const std::size_t count = rows.size() / config_.dimension;
+    const std::scoped_lock lock{allocationMutex_};
+    const std::size_t stored = vectors_->size();
+    if (stored + count > config_.capacity) {
+        throw IndexStateError("index is full: cannot add " + std::to_string(count) +
+                              " vectors to " + std::to_string(stored) + " of capacity " +
+                              std::to_string(config_.capacity));
+    }
+    for (std::size_t row = 0; row < count; ++row) {
+        static_cast<void>(
+            vectors_->append(prepared(rows.subspan(row * config_.dimension, config_.dimension))));
+        static_cast<void>(graph_->addNode(layerAssigner_->nextLevel()));
+    }
+    return static_cast<NodeId>(stored);
+}
+
+HnswIndex::EntrySnapshot HnswIndex::readEntry() const {
+    const std::shared_lock lock{entryMutex_};
+    return {graph_->entryPoint(), graph_->maxLevel()};
+}
+
+void HnswIndex::linkNode(NodeId id) {
+    const LevelIndex level = graph_->levelOf(id);
+    std::unique_lock promotion{entryMutex_, std::defer_lock};
+    auto snapshot = readEntry();
+    if (!snapshot.entryPoint || level > snapshot.topLevel) {
+        promotion.lock();
+        snapshot = {graph_->entryPoint(), graph_->maxLevel()};
+        if (!snapshot.entryPoint) {
+            graph_->setEntryPoint(id);
+            return;
+        }
+    }
     const auto lease = visitedPool_.acquire();
-    const SearchContext context{*graph_, distances_, lease.get()};
-    const LevelIndex topLevel = graph_->maxLevel();
+    const SearchContext context{*graph_, distances_, lease.get(), &nodeLocks_};
+    linkBelow(id, *snapshot.entryPoint, snapshot.topLevel, context);
+    if (promotion.owns_lock() && level > graph_->maxLevel()) {
+        graph_->setEntryPoint(id);
+    }
+}
+
+void HnswIndex::linkBelow(NodeId id,
+                          NodeId entryPoint,
+                          LevelIndex topLevel,
+                          const SearchContext& context) {
+    const auto vector = vectors_->at(id);
+    const LevelIndex level = graph_->levelOf(id);
     const Neighbor entry{entryPoint, distances_.toQuery(vector, entryPoint)};
     std::vector<Neighbor> entries{greedyDescend(context, vector, entry, topLevel, level)};
     for (int current = std::min(level, topLevel); current >= 0; --current) {
         const auto layer = static_cast<LevelIndex>(current);
         auto candidates = searchLayer(context, vector, entries, config_.efConstruction, layer);
+        std::erase_if(candidates, [id](const Neighbor& candidate) { return candidate.id == id; });
         const auto selected =
             neighborSelector_->select(candidates, config_.maxNeighbors, distances_);
-        graph_->setNeighbors(id, layer, selected);
+        {
+            const auto guard = nodeLocks_.lock(id);
+            mergeNeighbors(id, layer, selected);
+        }
         for (const NodeId neighbor : selected) {
             connectBack(neighbor, id, layer);
         }
-        entries = std::move(candidates);
+        entries = candidates.empty() ? entries : std::move(candidates);
     }
 }
 
 void HnswIndex::connectBack(NodeId neighbor, NodeId newNode, LevelIndex level) {
-    const auto existing = graph_->neighbors(neighbor, level);
-    std::vector<NodeId> updated(existing.begin(), existing.end());
-    if (updated.size() < graph_->maxNeighbors(level)) {
-        updated.push_back(newNode);
-        graph_->setNeighbors(neighbor, level, updated);
-        return;
+    const auto guard = nodeLocks_.lock(neighbor);
+    mergeNeighbors(neighbor, level, {&newNode, 1});
+}
+
+void HnswIndex::mergeNeighbors(NodeId node, LevelIndex level, std::span<const NodeId> additions) {
+    const auto existing = graph_->neighbors(node, level);
+    std::vector<NodeId> merged(existing.begin(), existing.end());
+    for (const NodeId addition : additions) {
+        if (std::ranges::find(merged, addition) == merged.end()) {
+            merged.push_back(addition);
+        }
     }
+    if (merged.size() > graph_->maxNeighbors(level)) {
+        merged = shrunk(node, level, merged);
+    }
+    graph_->setNeighbors(node, level, merged);
+}
+
+std::vector<NodeId> HnswIndex::shrunk(NodeId node,
+                                      LevelIndex level,
+                                      std::span<const NodeId> ids) const {
     std::vector<Neighbor> candidates;
-    candidates.reserve(updated.size() + 1);
-    for (const NodeId current : updated) {
-        candidates.push_back({current, distances_.between(neighbor, current)});
+    candidates.reserve(ids.size());
+    for (const NodeId current : ids) {
+        candidates.push_back({current, distances_.between(node, current)});
     }
-    candidates.push_back({newNode, distances_.between(neighbor, newNode)});
     std::ranges::sort(candidates, CloserFirst{});
-    const auto kept =
-        neighborSelector_->select(candidates, graph_->maxNeighbors(level), distances_);
-    graph_->setNeighbors(neighbor, level, kept);
+    return neighborSelector_->select(candidates, graph_->maxNeighbors(level), distances_);
 }
 
 }

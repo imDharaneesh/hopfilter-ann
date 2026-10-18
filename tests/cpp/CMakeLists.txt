@@ -25,6 +25,7 @@ add_executable(hopfilter_core_tests
     graph/node_locks_test.cpp
     index/hnsw_index_builder_test.cpp
     index/hnsw_index_test.cpp
+    index/hnsw_parallel_build_test.cpp
     index/hnsw_recall_test.cpp
     io/index_serializer_test.cpp
     search/search_test.cpp

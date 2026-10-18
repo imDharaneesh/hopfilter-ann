@@ -3,6 +3,8 @@
 #include <cstddef>
 #include <memory>
 #include <mutex>
+#include <optional>
+#include <shared_mutex>
 #include <span>
 #include <vector>
 
@@ -13,8 +15,10 @@
 #include <hopfilter/graph/layer_assigner.hpp>
 #include <hopfilter/graph/neighbor_selector.hpp>
 #include <hopfilter/graph/node_distances.hpp>
+#include <hopfilter/graph/node_locks.hpp>
 #include <hopfilter/index/index_config.hpp>
 #include <hopfilter/index/interfaces.hpp>
+#include <hopfilter/search/search_context.hpp>
 #include <hopfilter/search/search_strategy.hpp>
 #include <hopfilter/storage/vector_store.hpp>
 
@@ -44,6 +48,11 @@ public:
     /// Throws InvalidArgumentError on a dimension mismatch and IndexStateError when full.
     NodeId insert(std::span<const float> vector) override;
 
+    /// Inserts row-major `rows` (a whole number of vectors) linking on `threads`
+    /// workers (0 = all cores). Row `i` gets id `first + i`; returns `first`. If the
+    /// batch does not fit, IndexStateError is thrown and nothing is inserted.
+    NodeId insertBatch(std::span<const float> rows, std::size_t threads);
+
     /// Throws InvalidArgumentError on a dimension mismatch or ``k == 0``. Returns fewer
     /// than ``k`` neighbors only when the index holds fewer than ``k`` vectors.
     [[nodiscard]] SearchResults search(std::span<const float> query,
@@ -60,10 +69,22 @@ public:
     [[nodiscard]] const DistanceMetric& metric() const noexcept { return *metric_; }
 
 private:
+    struct EntrySnapshot {
+        std::optional<NodeId> entryPoint;
+        LevelIndex topLevel = 0;
+    };
+
     void validateDimension(std::span<const float> vector) const;
     [[nodiscard]] std::vector<float> prepared(std::span<const float> vector) const;
-    void link(NodeId id, LevelIndex level, NodeId entryPoint);
+    [[nodiscard]] NodeId allocate(std::span<const float> rows);
+    [[nodiscard]] EntrySnapshot readEntry() const;
+    void linkNode(NodeId id);
+    void linkBelow(NodeId id, NodeId entryPoint, LevelIndex topLevel, const SearchContext& context);
     void connectBack(NodeId neighbor, NodeId newNode, LevelIndex level);
+    void mergeNeighbors(NodeId node, LevelIndex level, std::span<const NodeId> additions);
+    [[nodiscard]] std::vector<NodeId> shrunk(NodeId node,
+                                             LevelIndex level,
+                                             std::span<const NodeId> ids) const;
 
     IndexConfig config_;
     std::unique_ptr<DistanceMetric> metric_;
@@ -74,7 +95,9 @@ private:
     std::unique_ptr<SearchStrategy> searchStrategy_;
     NodeDistances distances_;
     mutable VisitedSetPool visitedPool_;
-    std::mutex insertMutex_;
+    std::mutex allocationMutex_;
+    mutable std::shared_mutex entryMutex_;
+    NodeLocks nodeLocks_;
 };
 
 }
