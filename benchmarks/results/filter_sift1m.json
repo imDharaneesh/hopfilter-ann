@@ -1,0 +1,3573 @@
+{
+    "config": {
+        "dataset": "sift-128-euclidean",
+        "index_cache": "data/indexes/sift-128-euclidean-M16-efc200.hopf",
+        "results_path": "benchmarks/results/filter_sift1m.json",
+        "data_dir": "data",
+        "k": 10,
+        "queries": 1000,
+        "selectivities": [
+            1.0,
+            0.5,
+            0.1,
+            0.01,
+            0.001
+        ],
+        "attributes": [
+            "random",
+            "clustered"
+        ],
+        "strategies": [
+            "post_filter",
+            "in_graph",
+            "pre_filter",
+            "adaptive"
+        ],
+        "ef_search": [
+            10,
+            16,
+            32,
+            64,
+            128,
+            256,
+            512
+        ],
+        "repeats": 3,
+        "warmup_queries": 100,
+        "time_budget_seconds": 30.0,
+        "search_threads": 0,
+        "seed": 7
+    },
+    "environment": {
+        "commit": "caed24eb3d664725bcb6a25dbc9be7c4aebaa586",
+        "python": "3.14.3",
+        "platform": "Windows-11-10.0.26200-SP0",
+        "processor": "AMD64 Family 25 Model 68 Stepping 1, AuthenticAMD",
+        "logical_cpus": 16,
+        "memory_gib": 15.8,
+        "search_threads": 0,
+        "simd": "avx2"
+    },
+    "sweep": [
+        {
+            "attribute": "random",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "post_filter",
+            "ef_search": 10,
+            "recall": 0.9182,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 28496.685855814234,
+                "min": 12721.85321046704,
+                "max": 29818.079887475775,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "post_filter",
+            "ef_search": 16,
+            "recall": 0.9182,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 28945.403160769427,
+                "min": 28939.8745036201,
+                "max": 30078.444574991958,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "post_filter",
+            "ef_search": 32,
+            "recall": 0.9182,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 28069.78145907541,
+                "min": 26940.816427993886,
+                "max": 28620.656114945614,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "post_filter",
+            "ef_search": 64,
+            "recall": 0.9596,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 15611.486300480692,
+                "min": 15478.630211594918,
+                "max": 16304.303514676476,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "post_filter",
+            "ef_search": 128,
+            "recall": 0.9894000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 10366.067302929701,
+                "min": 9364.383127937299,
+                "max": 10574.904697454538,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "post_filter",
+            "ef_search": 256,
+            "recall": 0.9981,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 5422.087851692619,
+                "min": 5259.650538919868,
+                "max": 5772.2489895843955,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "post_filter",
+            "ef_search": 512,
+            "recall": 0.9999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 3019.6892800053115,
+                "min": 2902.236143823815,
+                "max": 3045.647556562423,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "in_graph",
+            "ef_search": 10,
+            "recall": 0.6902999999999999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 69003.11209618422,
+                "min": 66265.97835719696,
+                "max": 70452.80020743956,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "in_graph",
+            "ef_search": 16,
+            "recall": 0.7845,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 41688.37936943163,
+                "min": 30319.93593641719,
+                "max": 52485.723817187325,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "in_graph",
+            "ef_search": 32,
+            "recall": 0.8930999999999999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 25663.003683172476,
+                "min": 22951.15077812662,
+                "max": 26601.687587058383,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "in_graph",
+            "ef_search": 64,
+            "recall": 0.9596,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 17447.53091833672,
+                "min": 17256.940301539064,
+                "max": 18319.950616629547,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "in_graph",
+            "ef_search": 128,
+            "recall": 0.9894000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 9724.542610820647,
+                "min": 8945.399963046573,
+                "max": 9764.862116789363,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "in_graph",
+            "ef_search": 256,
+            "recall": 0.9981,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 4716.889908520344,
+                "min": 4710.104822763578,
+                "max": 5468.724365786036,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "in_graph",
+            "ef_search": 512,
+            "recall": 0.9999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2708.6698290043305,
+                "min": 2626.660180499392,
+                "max": 2753.289561703669,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "pre_filter",
+            "ef_search": 10,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 41.69251880780362,
+                "min": 41.69251880780362,
+                "max": 41.69251880780362,
+                "runs": 1.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "adaptive",
+            "ef_search": 10,
+            "recall": 0.9182,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 20831.336977428004,
+                "min": 20523.892893842098,
+                "max": 22694.623411230514,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "adaptive",
+            "ef_search": 16,
+            "recall": 0.9182,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 23869.367707833535,
+                "min": 22923.73957795201,
+                "max": 24129.003285461284,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "adaptive",
+            "ef_search": 32,
+            "recall": 0.9182,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 25558.19087536063,
+                "min": 24761.11715389782,
+                "max": 26134.361961256658,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "adaptive",
+            "ef_search": 64,
+            "recall": 0.9596,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 17031.335956700495,
+                "min": 16503.529286918732,
+                "max": 17253.784188417772,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "adaptive",
+            "ef_search": 128,
+            "recall": 0.9894000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 10754.977939534907,
+                "min": 10105.164449604546,
+                "max": 10904.79243684148,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "adaptive",
+            "ef_search": 256,
+            "recall": 0.9981,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 5859.157568807529,
+                "min": 5560.563152179159,
+                "max": 5889.180926956382,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "adaptive",
+            "ef_search": 512,
+            "recall": 0.9999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2887.519562976348,
+                "min": 2684.4311585653404,
+                "max": 2888.9643870230757,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "post_filter",
+            "ef_search": 10,
+            "recall": 0.885,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 25625.71592333061,
+                "min": 25356.319678281998,
+                "max": 26625.982161965654,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "post_filter",
+            "ef_search": 16,
+            "recall": 0.885,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 26028.245855374043,
+                "min": 24891.782959496646,
+                "max": 26677.551082724498,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "post_filter",
+            "ef_search": 32,
+            "recall": 0.885,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 26812.598708044603,
+                "min": 26013.07934264018,
+                "max": 28513.424126033828,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "post_filter",
+            "ef_search": 64,
+            "recall": 0.9401999999999999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 20560.01363606016,
+                "min": 20125.09760336658,
+                "max": 20751.322378424717,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "post_filter",
+            "ef_search": 128,
+            "recall": 0.9823000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 10799.089423400783,
+                "min": 10791.92202605348,
+                "max": 11766.256252437051,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "post_filter",
+            "ef_search": 256,
+            "recall": 0.9960000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 5846.0113834203075,
+                "min": 5829.6630751789,
+                "max": 5983.598954372122,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "post_filter",
+            "ef_search": 512,
+            "recall": 0.9994999999999999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2858.367054923095,
+                "min": 2763.0262873484,
+                "max": 2930.0191301911077,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "in_graph",
+            "ef_search": 10,
+            "recall": 0.7692,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 45437.60961526596,
+                "min": 44930.290708987966,
+                "max": 46966.21715872852,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "in_graph",
+            "ef_search": 16,
+            "recall": 0.8531000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 31998.566453307245,
+                "min": 31490.508752545615,
+                "max": 33535.4402644885,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "in_graph",
+            "ef_search": 32,
+            "recall": 0.9409000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 19036.16109216256,
+                "min": 18851.633866155924,
+                "max": 19590.135177078457,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "in_graph",
+            "ef_search": 64,
+            "recall": 0.9827,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 9545.546099091567,
+                "min": 9363.006575907588,
+                "max": 9547.578445106514,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "in_graph",
+            "ef_search": 128,
+            "recall": 0.9962,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 5594.111415308015,
+                "min": 5301.470787994949,
+                "max": 5691.83386883688,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "in_graph",
+            "ef_search": 256,
+            "recall": 0.9994999999999999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2548.7259046499103,
+                "min": 2509.0935825054685,
+                "max": 2783.830288630291,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "in_graph",
+            "ef_search": 512,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 1360.0281471162002,
+                "min": 1349.0999951159774,
+                "max": 1456.772886839581,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "pre_filter",
+            "ef_search": 10,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 62.41139765944742,
+                "min": 62.41139765944742,
+                "max": 62.41139765944742,
+                "runs": 1.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "adaptive",
+            "ef_search": 10,
+            "recall": 0.7692,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 39214.76358435091,
+                "min": 37744.82237059063,
+                "max": 41012.18064833399,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "adaptive",
+            "ef_search": 16,
+            "recall": 0.8531000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 29397.584700006024,
+                "min": 28873.02798511312,
+                "max": 30102.347998569527,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "adaptive",
+            "ef_search": 32,
+            "recall": 0.9409000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 15503.972109546006,
+                "min": 14302.407233014515,
+                "max": 16708.074853492213,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "adaptive",
+            "ef_search": 64,
+            "recall": 0.9827,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 9687.059540413098,
+                "min": 9529.6725401801,
+                "max": 10105.705682815982,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "adaptive",
+            "ef_search": 128,
+            "recall": 0.9962,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 5116.238378152307,
+                "min": 5020.045040239654,
+                "max": 5232.769276674936,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "adaptive",
+            "ef_search": 256,
+            "recall": 0.9994999999999999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2578.2837861685866,
+                "min": 2486.7048325537326,
+                "max": 2745.6302607278676,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "adaptive",
+            "ef_search": 512,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 1364.965405598885,
+                "min": 1266.3726148735882,
+                "max": 1447.723360936785,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "post_filter",
+            "ef_search": 10,
+            "recall": 0.395,
+            "mean_results": 3.967,
+            "qps": {
+                "median": 29362.453096243153,
+                "min": 28711.870627911732,
+                "max": 29491.130553913532,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "post_filter",
+            "ef_search": 16,
+            "recall": 0.395,
+            "mean_results": 3.967,
+            "qps": {
+                "median": 30754.279480729907,
+                "min": 29552.57400114627,
+                "max": 32063.100183860322,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "post_filter",
+            "ef_search": 32,
+            "recall": 0.395,
+            "mean_results": 3.967,
+            "qps": {
+                "median": 28055.29137773872,
+                "min": 27667.72172427173,
+                "max": 31065.548308779125,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "post_filter",
+            "ef_search": 64,
+            "recall": 0.621,
+            "mean_results": 6.339,
+            "qps": {
+                "median": 19871.58978526577,
+                "min": 19752.96935151009,
+                "max": 21246.082748708228,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "post_filter",
+            "ef_search": 128,
+            "recall": 0.9170999999999999,
+            "mean_results": 9.636,
+            "qps": {
+                "median": 11232.408649153633,
+                "min": 10919.820123971806,
+                "max": 11542.532505631509,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "post_filter",
+            "ef_search": 256,
+            "recall": 0.9835,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 5433.4685362016835,
+                "min": 5106.772398527426,
+                "max": 5761.739399491426,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "post_filter",
+            "ef_search": 512,
+            "recall": 0.9974999999999999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2815.4468932213877,
+                "min": 2794.501315683034,
+                "max": 2898.3213791621743,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "in_graph",
+            "ef_search": 10,
+            "recall": 0.9155,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 12094.823416711635,
+                "min": 11266.38695853395,
+                "max": 12703.865284264408,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "in_graph",
+            "ef_search": 16,
+            "recall": 0.9583,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 7792.5437847772355,
+                "min": 7749.096647479678,
+                "max": 7859.589996178023,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "in_graph",
+            "ef_search": 32,
+            "recall": 0.9914,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 4306.997622216614,
+                "min": 4109.630136831984,
+                "max": 4556.639023202394,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "in_graph",
+            "ef_search": 64,
+            "recall": 0.9987,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2075.41734562943,
+                "min": 2057.8773899169755,
+                "max": 2276.647763382507,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "in_graph",
+            "ef_search": 128,
+            "recall": 0.9999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 1136.840592683177,
+                "min": 1086.7581883227303,
+                "max": 1144.0764014210142,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "in_graph",
+            "ef_search": 256,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 542.9031376036432,
+                "min": 525.9620108064976,
+                "max": 562.614397079587,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "in_graph",
+            "ef_search": 512,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 283.653108246508,
+                "min": 270.5153498673365,
+                "max": 293.6617027170977,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "pre_filter",
+            "ef_search": 10,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 361.0598275762137,
+                "min": 348.4920643878096,
+                "max": 373.3926519890025,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "adaptive",
+            "ef_search": 10,
+            "recall": 0.9155,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 10826.295337991016,
+                "min": 9263.642332260586,
+                "max": 11093.14022027394,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "adaptive",
+            "ef_search": 16,
+            "recall": 0.9583,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 8101.292072980818,
+                "min": 7929.314915968727,
+                "max": 8422.683974988482,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "adaptive",
+            "ef_search": 32,
+            "recall": 0.9914,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 4443.133226132316,
+                "min": 4336.5153235560465,
+                "max": 4638.838584311107,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "adaptive",
+            "ef_search": 64,
+            "recall": 0.9987,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 1998.806712381405,
+                "min": 1716.808638123802,
+                "max": 2121.6913021163823,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "adaptive",
+            "ef_search": 128,
+            "recall": 0.9999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 1075.2736732567068,
+                "min": 1008.0956126581694,
+                "max": 1142.1136594576942,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "adaptive",
+            "ef_search": 256,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 544.4876344096679,
+                "min": 507.30331608785605,
+                "max": 575.4075971653917,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "adaptive",
+            "ef_search": 512,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 280.8256960664497,
+                "min": 265.64531356464005,
+                "max": 285.2556354073074,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "post_filter",
+            "ef_search": 10,
+            "recall": 0.036699999999999997,
+            "mean_results": 0.367,
+            "qps": {
+                "median": 28286.38266655491,
+                "min": 27877.439600008463,
+                "max": 29010.90233620834,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "post_filter",
+            "ef_search": 16,
+            "recall": 0.036699999999999997,
+            "mean_results": 0.367,
+            "qps": {
+                "median": 25786.48787862911,
+                "min": 24154.64769041349,
+                "max": 28872.777889851583,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "post_filter",
+            "ef_search": 32,
+            "recall": 0.036699999999999997,
+            "mean_results": 0.367,
+            "qps": {
+                "median": 29240.27907774804,
+                "min": 28134.46022737815,
+                "max": 29371.24966462154,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "post_filter",
+            "ef_search": 64,
+            "recall": 0.0623,
+            "mean_results": 0.623,
+            "qps": {
+                "median": 20860.016768011403,
+                "min": 20520.481495049673,
+                "max": 21143.61589606426,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "post_filter",
+            "ef_search": 128,
+            "recall": 0.1299,
+            "mean_results": 1.299,
+            "qps": {
+                "median": 11170.351207001237,
+                "min": 11067.015201365863,
+                "max": 11226.393696685594,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "post_filter",
+            "ef_search": 256,
+            "recall": 0.2546,
+            "mean_results": 2.546,
+            "qps": {
+                "median": 5269.19250747447,
+                "min": 5057.508933049932,
+                "max": 5513.508924861075,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "post_filter",
+            "ef_search": 512,
+            "recall": 0.5078,
+            "mean_results": 5.083,
+            "qps": {
+                "median": 2803.907862518519,
+                "min": 2769.3090768708,
+                "max": 2873.240391628798,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "in_graph",
+            "ef_search": 10,
+            "recall": 0.9855,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 1377.466819286716,
+                "min": 1300.5331925552814,
+                "max": 1408.7632115856247,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "in_graph",
+            "ef_search": 16,
+            "recall": 0.9959,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 817.0694301131366,
+                "min": 786.2411571269403,
+                "max": 861.1659291203696,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "in_graph",
+            "ef_search": 32,
+            "recall": 0.9997999999999999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 431.8015260556694,
+                "min": 429.18535983818356,
+                "max": 442.28953121844233,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "in_graph",
+            "ef_search": 64,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 221.6700863703334,
+                "min": 218.21738523336901,
+                "max": 222.81703973842065,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "in_graph",
+            "ef_search": 128,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 115.1249833079339,
+                "min": 113.19269714228176,
+                "max": 116.60936851563858,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "in_graph",
+            "ef_search": 256,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 59.16736244040637,
+                "min": 59.16736244040637,
+                "max": 59.16736244040637,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "in_graph",
+            "ef_search": 512,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 29.42658653128657,
+                "min": 29.42658653128657,
+                "max": 29.42658653128657,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "pre_filter",
+            "ef_search": 10,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 1874.25264168681,
+                "min": 1815.3976582910716,
+                "max": 2094.049632494313,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "adaptive",
+            "ef_search": 10,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2126.933249517824,
+                "min": 1928.2252846527633,
+                "max": 2165.9390916549587,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "adaptive",
+            "ef_search": 16,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2002.177167480975,
+                "min": 2001.7375081044027,
+                "max": 2155.6630130130084,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "adaptive",
+            "ef_search": 32,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 1989.3403189548233,
+                "min": 1807.1754624617918,
+                "max": 2065.5830892521035,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "adaptive",
+            "ef_search": 64,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2005.4246737257683,
+                "min": 1829.989576465107,
+                "max": 2077.833999381401,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "adaptive",
+            "ef_search": 128,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 1741.0907516561902,
+                "min": 1679.71779401411,
+                "max": 1912.510303616395,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "adaptive",
+            "ef_search": 256,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 1937.9014968660736,
+                "min": 1847.1228753321323,
+                "max": 2074.9673244901,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "adaptive",
+            "ef_search": 512,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 1886.599521213832,
+                "min": 1710.6591169391768,
+                "max": 2009.7553523611393,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "post_filter",
+            "ef_search": 10,
+            "recall": 0.004,
+            "mean_results": 0.04,
+            "qps": {
+                "median": 27559.74950903729,
+                "min": 26223.042688489597,
+                "max": 27761.12109606989,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "post_filter",
+            "ef_search": 16,
+            "recall": 0.004,
+            "mean_results": 0.04,
+            "qps": {
+                "median": 27793.527456487627,
+                "min": 27233.115444082832,
+                "max": 27797.931279676865,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "post_filter",
+            "ef_search": 32,
+            "recall": 0.004,
+            "mean_results": 0.04,
+            "qps": {
+                "median": 29616.64218479723,
+                "min": 27563.39581016572,
+                "max": 31233.50478694557,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "post_filter",
+            "ef_search": 64,
+            "recall": 0.0060999999999999995,
+            "mean_results": 0.061,
+            "qps": {
+                "median": 18568.033269370222,
+                "min": 18381.575785036992,
+                "max": 19420.417072797252,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "post_filter",
+            "ef_search": 128,
+            "recall": 0.013600000000000001,
+            "mean_results": 0.136,
+            "qps": {
+                "median": 11244.93836973801,
+                "min": 10703.005508568629,
+                "max": 11552.213116075694,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "post_filter",
+            "ef_search": 256,
+            "recall": 0.0264,
+            "mean_results": 0.264,
+            "qps": {
+                "median": 6025.769806258237,
+                "min": 5934.105321341803,
+                "max": 6147.868533387619,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "post_filter",
+            "ef_search": 512,
+            "recall": 0.0543,
+            "mean_results": 0.543,
+            "qps": {
+                "median": 3042.1933973422842,
+                "min": 3040.594983541085,
+                "max": 3094.197266299845,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "in_graph",
+            "ef_search": 10,
+            "recall": 0.999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 153.82006596267516,
+                "min": 151.86522617187688,
+                "max": 157.76967448176444,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "in_graph",
+            "ef_search": 16,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 99.18658372112998,
+                "min": 99.18658372112998,
+                "max": 99.18658372112998,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "in_graph",
+            "ef_search": 32,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 49.75716463617932,
+                "min": 49.75716463617932,
+                "max": 49.75716463617932,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "in_graph",
+            "ef_search": 64,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 25.512126342260945,
+                "min": 25.512126342260945,
+                "max": 25.512126342260945,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "in_graph",
+            "ef_search": 128,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 12.985311944871238,
+                "min": 12.985311944871238,
+                "max": 12.985311944871238,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "in_graph",
+            "ef_search": 256,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 6.690840982915676,
+                "min": 6.690840982915676,
+                "max": 6.690840982915676,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "in_graph",
+            "ef_search": 512,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 3.458591348095328,
+                "min": 3.458591348095328,
+                "max": 3.458591348095328,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "pre_filter",
+            "ef_search": 10,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2623.977010125598,
+                "min": 2554.9042537165137,
+                "max": 2680.989585459977,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "adaptive",
+            "ef_search": 10,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2813.7967206690532,
+                "min": 2566.6534225295813,
+                "max": 2891.936990606428,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "adaptive",
+            "ef_search": 16,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2851.2716814834903,
+                "min": 2603.0813714292995,
+                "max": 2905.389759349227,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "adaptive",
+            "ef_search": 32,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2834.817454680048,
+                "min": 2757.1823909617583,
+                "max": 2979.5877382501485,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "adaptive",
+            "ef_search": 64,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 3034.7715010478505,
+                "min": 2887.2927936783676,
+                "max": 3085.299903620388,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "adaptive",
+            "ef_search": 128,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2752.537771189288,
+                "min": 2562.4625880876174,
+                "max": 3107.7983363095473,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "adaptive",
+            "ef_search": 256,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2913.898948413862,
+                "min": 2773.7281349174627,
+                "max": 3005.6656797342466,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "random",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "adaptive",
+            "ef_search": 512,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2909.8832434723013,
+                "min": 2697.145853438592,
+                "max": 2996.0652676930977,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "post_filter",
+            "ef_search": 10,
+            "recall": 0.9182,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 29499.308213632885,
+                "min": 28397.31249556836,
+                "max": 30275.782109105814,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "post_filter",
+            "ef_search": 16,
+            "recall": 0.9182,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 29930.5312550341,
+                "min": 29687.59744222362,
+                "max": 31036.91215189128,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "post_filter",
+            "ef_search": 32,
+            "recall": 0.9182,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 31182.567688045896,
+                "min": 31131.311869445926,
+                "max": 32322.605448510316,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "post_filter",
+            "ef_search": 64,
+            "recall": 0.9596,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 21930.690247269024,
+                "min": 20774.558646189435,
+                "max": 22063.31730468215,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "post_filter",
+            "ef_search": 128,
+            "recall": 0.9894000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 11436.321990079072,
+                "min": 11370.820650844678,
+                "max": 11675.53229318441,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "post_filter",
+            "ef_search": 256,
+            "recall": 0.9981,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 5697.879077113429,
+                "min": 5581.375617601661,
+                "max": 5886.4388216691,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "post_filter",
+            "ef_search": 512,
+            "recall": 0.9999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2909.017284439975,
+                "min": 2860.2548144831594,
+                "max": 3057.145696334108,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "in_graph",
+            "ef_search": 10,
+            "recall": 0.6902999999999999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 60157.25093472404,
+                "min": 53217.24874988385,
+                "max": 66498.64695899101,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "in_graph",
+            "ef_search": 16,
+            "recall": 0.7845,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 50056.814579172824,
+                "min": 47126.01957597391,
+                "max": 50143.66161617982,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "in_graph",
+            "ef_search": 32,
+            "recall": 0.8930999999999999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 31887.144988644766,
+                "min": 31458.115126170294,
+                "max": 32831.126565096136,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "in_graph",
+            "ef_search": 64,
+            "recall": 0.9596,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 19370.64767266165,
+                "min": 19143.738841158643,
+                "max": 19993.00244706554,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "in_graph",
+            "ef_search": 128,
+            "recall": 0.9894000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 9605.38208752289,
+                "min": 9154.181124992378,
+                "max": 10480.631271358887,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "in_graph",
+            "ef_search": 256,
+            "recall": 0.9981,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 5437.924191663902,
+                "min": 5371.824245916292,
+                "max": 5490.315357026632,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "in_graph",
+            "ef_search": 512,
+            "recall": 0.9999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2746.7509371069436,
+                "min": 2446.313808821859,
+                "max": 2825.9596041194372,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "pre_filter",
+            "ef_search": 10,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 41.31825427497411,
+                "min": 41.31825427497411,
+                "max": 41.31825427497411,
+                "runs": 1.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "adaptive",
+            "ef_search": 10,
+            "recall": 0.9182,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 20811.264725741494,
+                "min": 19885.262048618606,
+                "max": 21356.20441955521,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "adaptive",
+            "ef_search": 16,
+            "recall": 0.9182,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 26179.79234862618,
+                "min": 25866.394921506922,
+                "max": 26515.00087564991,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "adaptive",
+            "ef_search": 32,
+            "recall": 0.9182,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 28070.01783665516,
+                "min": 18154.553349559512,
+                "max": 28430.979571209242,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "adaptive",
+            "ef_search": 64,
+            "recall": 0.9596,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 19942.565396856633,
+                "min": 15544.339441672191,
+                "max": 20162.347216655497,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "adaptive",
+            "ef_search": 128,
+            "recall": 0.9894000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 10411.8403438475,
+                "min": 10337.904754723706,
+                "max": 10960.669828195787,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "adaptive",
+            "ef_search": 256,
+            "recall": 0.9981,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 5585.8682001429615,
+                "min": 5443.7855643507855,
+                "max": 5645.038830099418,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 1.0,
+            "matching": 1000000,
+            "strategy": "adaptive",
+            "ef_search": 512,
+            "recall": 0.9999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2732.37108315746,
+                "min": 2469.0321641870796,
+                "max": 2911.154758965533,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "post_filter",
+            "ef_search": 10,
+            "recall": 0.6517999999999999,
+            "mean_results": 7.212,
+            "qps": {
+                "median": 29484.78291724207,
+                "min": 29196.82452918479,
+                "max": 31850.07531107763,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "post_filter",
+            "ef_search": 16,
+            "recall": 0.6517999999999999,
+            "mean_results": 7.212,
+            "qps": {
+                "median": 29956.174121821572,
+                "min": 28624.588518823384,
+                "max": 32083.468329413725,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "post_filter",
+            "ef_search": 32,
+            "recall": 0.6517999999999999,
+            "mean_results": 7.212,
+            "qps": {
+                "median": 27325.390781671373,
+                "min": 25706.47829598005,
+                "max": 28041.445251750236,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "post_filter",
+            "ef_search": 64,
+            "recall": 0.7231,
+            "mean_results": 7.655,
+            "qps": {
+                "median": 19396.196396794672,
+                "min": 17249.468720350367,
+                "max": 20252.13912343319,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "post_filter",
+            "ef_search": 128,
+            "recall": 0.8010999999999999,
+            "mean_results": 8.187,
+            "qps": {
+                "median": 11253.885403388034,
+                "min": 10769.595280034844,
+                "max": 11633.480227093141,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "post_filter",
+            "ef_search": 256,
+            "recall": 0.8548,
+            "mean_results": 8.616,
+            "qps": {
+                "median": 5823.060483808529,
+                "min": 5768.406552653523,
+                "max": 5902.915921898747,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "post_filter",
+            "ef_search": 512,
+            "recall": 0.9037000000000001,
+            "mean_results": 9.055,
+            "qps": {
+                "median": 2969.7674705670156,
+                "min": 2886.896032131509,
+                "max": 3052.7369465524575,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "in_graph",
+            "ef_search": 10,
+            "recall": 0.7967,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 3828.566003452729,
+                "min": 3808.236988277046,
+                "max": 4001.775187014074,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "in_graph",
+            "ef_search": 16,
+            "recall": 0.8694000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2936.1375405417884,
+                "min": 2893.9313393781435,
+                "max": 3177.654731649941,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "in_graph",
+            "ef_search": 32,
+            "recall": 0.9407,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 1999.11679022599,
+                "min": 1977.1453856117819,
+                "max": 2180.277557860487,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "in_graph",
+            "ef_search": 64,
+            "recall": 0.9793,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 1230.413811568899,
+                "min": 1188.208127470532,
+                "max": 1245.3506391023088,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "in_graph",
+            "ef_search": 128,
+            "recall": 0.9946999999999999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 844.7026081143541,
+                "min": 790.6506509452167,
+                "max": 878.2845206262641,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "in_graph",
+            "ef_search": 256,
+            "recall": 0.9989000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 559.2548086218069,
+                "min": 509.24651631605144,
+                "max": 567.1749537377577,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "in_graph",
+            "ef_search": 512,
+            "recall": 0.9999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 344.0003247382987,
+                "min": 343.42349333024634,
+                "max": 346.45645721525585,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "pre_filter",
+            "ef_search": 10,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 65.46917522020352,
+                "min": 65.46917522020352,
+                "max": 65.46917522020352,
+                "runs": 1.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "adaptive",
+            "ef_search": 10,
+            "recall": 0.7967,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 3504.1538234465243,
+                "min": 3377.8637103411397,
+                "max": 3756.9169545148297,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "adaptive",
+            "ef_search": 16,
+            "recall": 0.8694000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2836.448131269674,
+                "min": 2836.3733110368084,
+                "max": 2872.7996150119548,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "adaptive",
+            "ef_search": 32,
+            "recall": 0.9407,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 1832.6249014843143,
+                "min": 1799.6833636444956,
+                "max": 1873.962176491473,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "adaptive",
+            "ef_search": 64,
+            "recall": 0.9793,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 1340.6076491194683,
+                "min": 1276.4509353809765,
+                "max": 1342.152888468366,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "adaptive",
+            "ef_search": 128,
+            "recall": 0.9946999999999999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 928.2401661750187,
+                "min": 862.0555144817347,
+                "max": 950.0580152588732,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "adaptive",
+            "ef_search": 256,
+            "recall": 0.9989000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 513.4465226164065,
+                "min": 508.6467143828964,
+                "max": 546.8110145779747,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.5,
+            "matching": 500000,
+            "strategy": "adaptive",
+            "ef_search": 512,
+            "recall": 0.9999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 355.0738040417496,
+                "min": 335.80864602368274,
+                "max": 358.52078054535536,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "post_filter",
+            "ef_search": 10,
+            "recall": 0.21600000000000003,
+            "mean_results": 2.344,
+            "qps": {
+                "median": 29927.12748892079,
+                "min": 29280.261846751637,
+                "max": 31142.946094376533,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "post_filter",
+            "ef_search": 16,
+            "recall": 0.21600000000000003,
+            "mean_results": 2.344,
+            "qps": {
+                "median": 28130.898685832955,
+                "min": 27543.960144811084,
+                "max": 29108.69185278075,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "post_filter",
+            "ef_search": 32,
+            "recall": 0.21600000000000003,
+            "mean_results": 2.344,
+            "qps": {
+                "median": 27548.209383141973,
+                "min": 27226.81297941218,
+                "max": 27565.06735399001,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "post_filter",
+            "ef_search": 64,
+            "recall": 0.26739999999999997,
+            "mean_results": 2.855,
+            "qps": {
+                "median": 20003.800709157833,
+                "min": 19958.088002748093,
+                "max": 20351.221380506828,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "post_filter",
+            "ef_search": 128,
+            "recall": 0.3638,
+            "mean_results": 3.785,
+            "qps": {
+                "median": 11231.348945579008,
+                "min": 11057.726861099114,
+                "max": 11522.84808125529,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "post_filter",
+            "ef_search": 256,
+            "recall": 0.4584,
+            "mean_results": 4.666,
+            "qps": {
+                "median": 5792.259456888109,
+                "min": 5765.157464144475,
+                "max": 6051.583699836277,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "post_filter",
+            "ef_search": 512,
+            "recall": 0.5424,
+            "mean_results": 5.477,
+            "qps": {
+                "median": 3017.8511931675225,
+                "min": 2772.156460396261,
+                "max": 3054.958396115496,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "in_graph",
+            "ef_search": 10,
+            "recall": 0.9345000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 215.93439498314916,
+                "min": 204.81275567479057,
+                "max": 219.04637110948394,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "in_graph",
+            "ef_search": 16,
+            "recall": 0.9628,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 185.20046079329387,
+                "min": 181.30792856337044,
+                "max": 185.59080764376515,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "in_graph",
+            "ef_search": 32,
+            "recall": 0.9871000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 140.27860762294418,
+                "min": 139.7661017075086,
+                "max": 143.53351790418807,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "in_graph",
+            "ef_search": 64,
+            "recall": 0.9964000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 101.16610834592795,
+                "min": 100.01914666490902,
+                "max": 101.74272467797917,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "in_graph",
+            "ef_search": 128,
+            "recall": 0.9993000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 72.07793025441002,
+                "min": 72.07793025441002,
+                "max": 72.07793025441002,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "in_graph",
+            "ef_search": 256,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 51.0373054171652,
+                "min": 51.0373054171652,
+                "max": 51.0373054171652,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "in_graph",
+            "ef_search": 512,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 38.41858249669264,
+                "min": 38.41858249669264,
+                "max": 38.41858249669264,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "pre_filter",
+            "ef_search": 10,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 356.4928179553548,
+                "min": 327.1364636342286,
+                "max": 356.5832888198978,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "adaptive",
+            "ef_search": 10,
+            "recall": 0.9345000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 224.65887739817464,
+                "min": 223.77587825403265,
+                "max": 231.30657194797908,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "adaptive",
+            "ef_search": 16,
+            "recall": 0.9628,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 183.63109819868026,
+                "min": 182.36029919977113,
+                "max": 186.70477535185785,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "adaptive",
+            "ef_search": 32,
+            "recall": 0.9871000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 130.33357915072563,
+                "min": 130.05215052180023,
+                "max": 136.2086470207954,
+                "runs": 3.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "adaptive",
+            "ef_search": 64,
+            "recall": 0.9964000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 99.8205057615649,
+                "min": 99.8205057615649,
+                "max": 99.8205057615649,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "adaptive",
+            "ef_search": 128,
+            "recall": 0.9993000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 71.34257254377783,
+                "min": 71.34257254377783,
+                "max": 71.34257254377783,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "adaptive",
+            "ef_search": 256,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 53.142954579724154,
+                "min": 53.142954579724154,
+                "max": 53.142954579724154,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.1,
+            "matching": 100000,
+            "strategy": "adaptive",
+            "ef_search": 512,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 37.375955138393735,
+                "min": 37.375955138393735,
+                "max": 37.375955138393735,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "post_filter",
+            "ef_search": 10,
+            "recall": 0.0249,
+            "mean_results": 0.255,
+            "qps": {
+                "median": 27423.33121102589,
+                "min": 26844.62865493203,
+                "max": 27779.012437980982,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "post_filter",
+            "ef_search": 16,
+            "recall": 0.0249,
+            "mean_results": 0.255,
+            "qps": {
+                "median": 25385.73625763106,
+                "min": 23576.3981522962,
+                "max": 26692.362519392333,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "post_filter",
+            "ef_search": 32,
+            "recall": 0.0249,
+            "mean_results": 0.255,
+            "qps": {
+                "median": 26854.793436506578,
+                "min": 24273.140787414955,
+                "max": 27071.438809174626,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "post_filter",
+            "ef_search": 64,
+            "recall": 0.0361,
+            "mean_results": 0.369,
+            "qps": {
+                "median": 18530.494718640435,
+                "min": 17976.170784440415,
+                "max": 18751.769694276307,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "post_filter",
+            "ef_search": 128,
+            "recall": 0.0641,
+            "mean_results": 0.654,
+            "qps": {
+                "median": 9510.151138443398,
+                "min": 9450.116615519519,
+                "max": 10584.810797540014,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "post_filter",
+            "ef_search": 256,
+            "recall": 0.10540000000000001,
+            "mean_results": 1.066,
+            "qps": {
+                "median": 5287.642462391532,
+                "min": 5148.6174160435585,
+                "max": 5449.246804668499,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "post_filter",
+            "ef_search": 512,
+            "recall": 0.1585,
+            "mean_results": 1.596,
+            "qps": {
+                "median": 2860.0756601319645,
+                "min": 2628.3972032826887,
+                "max": 2898.290298271593,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "in_graph",
+            "ef_search": 10,
+            "recall": 0.9921,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 37.992917595853655,
+                "min": 37.992917595853655,
+                "max": 37.992917595853655,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "in_graph",
+            "ef_search": 16,
+            "recall": 0.9955,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 31.539585235679088,
+                "min": 31.539585235679088,
+                "max": 31.539585235679088,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "in_graph",
+            "ef_search": 32,
+            "recall": 0.9994999999999999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 23.847490376924053,
+                "min": 23.847490376924053,
+                "max": 23.847490376924053,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "in_graph",
+            "ef_search": 64,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 17.950877724679295,
+                "min": 17.950877724679295,
+                "max": 17.950877724679295,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "in_graph",
+            "ef_search": 128,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 13.528228075787668,
+                "min": 13.528228075787668,
+                "max": 13.528228075787668,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "in_graph",
+            "ef_search": 256,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 9.689159083794243,
+                "min": 9.689159083794243,
+                "max": 9.689159083794243,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "in_graph",
+            "ef_search": 512,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 7.15051626001588,
+                "min": 7.15051626001588,
+                "max": 7.15051626001588,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "pre_filter",
+            "ef_search": 10,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2015.0431028496573,
+                "min": 1881.6399547296717,
+                "max": 2090.625259851609,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "adaptive",
+            "ef_search": 10,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2029.8073143321576,
+                "min": 1843.2021139037915,
+                "max": 2098.3980829322013,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "adaptive",
+            "ef_search": 16,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 1724.5497415912932,
+                "min": 1589.9012019013787,
+                "max": 2038.8544491133907,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "adaptive",
+            "ef_search": 32,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 1867.7233497576856,
+                "min": 1817.3881151840872,
+                "max": 2094.1465464209095,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "adaptive",
+            "ef_search": 64,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2023.5754635879018,
+                "min": 1942.4487402518648,
+                "max": 2105.074809054841,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "adaptive",
+            "ef_search": 128,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 1900.2682228999995,
+                "min": 1876.0958743429342,
+                "max": 2134.4293487035497,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "adaptive",
+            "ef_search": 256,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2002.5063371331257,
+                "min": 1988.2352148109246,
+                "max": 2064.2063117625203,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.01,
+            "matching": 10000,
+            "strategy": "adaptive",
+            "ef_search": 512,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2058.1984425617193,
+                "min": 1621.291053473277,
+                "max": 2120.7958669531495,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "post_filter",
+            "ef_search": 10,
+            "recall": 0.0018,
+            "mean_results": 0.018,
+            "qps": {
+                "median": 29348.148259275385,
+                "min": 28932.004028645515,
+                "max": 29404.06776335056,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "post_filter",
+            "ef_search": 16,
+            "recall": 0.0018,
+            "mean_results": 0.018,
+            "qps": {
+                "median": 29078.89683060258,
+                "min": 29078.474091627886,
+                "max": 29462.37065492063,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "post_filter",
+            "ef_search": 32,
+            "recall": 0.0018,
+            "mean_results": 0.018,
+            "qps": {
+                "median": 28282.382604611317,
+                "min": 27222.069497185978,
+                "max": 28934.682843069546,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "post_filter",
+            "ef_search": 64,
+            "recall": 0.0028,
+            "mean_results": 0.028,
+            "qps": {
+                "median": 19783.019826122283,
+                "min": 19300.622642153445,
+                "max": 20134.660608859827,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "post_filter",
+            "ef_search": 128,
+            "recall": 0.0057,
+            "mean_results": 0.057,
+            "qps": {
+                "median": 11059.58572796485,
+                "min": 10723.504098003626,
+                "max": 11415.642395392411,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "post_filter",
+            "ef_search": 256,
+            "recall": 0.0112,
+            "mean_results": 0.113,
+            "qps": {
+                "median": 5600.480745276708,
+                "min": 5576.3118269351535,
+                "max": 5779.4080848862295,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "post_filter",
+            "ef_search": 512,
+            "recall": 0.0206,
+            "mean_results": 0.207,
+            "qps": {
+                "median": 2670.1891805298314,
+                "min": 2612.012226123822,
+                "max": 2696.691267759652,
+                "runs": 3.0
+            },
+            "plan": "post_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "in_graph",
+            "ef_search": 10,
+            "recall": 0.9974999999999999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 10.120205913359188,
+                "min": 10.120205913359188,
+                "max": 10.120205913359188,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "in_graph",
+            "ef_search": 16,
+            "recall": 0.9992000000000001,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 8.582840180861004,
+                "min": 8.582840180861004,
+                "max": 8.582840180861004,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "in_graph",
+            "ef_search": 32,
+            "recall": 0.9999,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 6.988426529022195,
+                "min": 6.988426529022195,
+                "max": 6.988426529022195,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "in_graph",
+            "ef_search": 64,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 5.670304930502211,
+                "min": 5.670304930502211,
+                "max": 5.670304930502211,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "in_graph",
+            "ef_search": 128,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 5.024321766955373,
+                "min": 5.024321766955373,
+                "max": 5.024321766955373,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "in_graph",
+            "ef_search": 256,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 4.684240456640259,
+                "min": 4.684240456640259,
+                "max": 4.684240456640259,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "in_graph",
+            "ef_search": 512,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 3.4977080398891367,
+                "min": 3.4977080398891367,
+                "max": 3.4977080398891367,
+                "runs": 1.0
+            },
+            "plan": "in_graph"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "pre_filter",
+            "ef_search": 10,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2809.4014932334144,
+                "min": 2533.261084589939,
+                "max": 2811.2045614349063,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "adaptive",
+            "ef_search": 10,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2861.4153594118607,
+                "min": 2390.8476438438242,
+                "max": 2945.4039913075994,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "adaptive",
+            "ef_search": 16,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2601.587436564697,
+                "min": 2382.531658981289,
+                "max": 2624.941988875091,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "adaptive",
+            "ef_search": 32,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2733.4533139667383,
+                "min": 2409.9091607001988,
+                "max": 2838.936352642624,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "adaptive",
+            "ef_search": 64,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2555.11511060736,
+                "min": 2536.0686015949072,
+                "max": 2686.9499143107473,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "adaptive",
+            "ef_search": 128,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2674.039886088713,
+                "min": 2514.5795321230294,
+                "max": 2992.7154316432066,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "adaptive",
+            "ef_search": 256,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2597.781805753984,
+                "min": 2286.254625520571,
+                "max": 2674.705762073788,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        },
+        {
+            "attribute": "clustered",
+            "selectivity": 0.001,
+            "matching": 1000,
+            "strategy": "adaptive",
+            "ef_search": 512,
+            "recall": 1.0,
+            "mean_results": 10.0,
+            "qps": {
+                "median": 2888.979410223005,
+                "min": 2786.051577101522,
+                "max": 2943.433391257317,
+                "runs": 3.0
+            },
+            "plan": "pre_filter"
+        }
+    ]
+}
