@@ -7,7 +7,7 @@
 
 **Two-tower retrieval with a from-scratch HNSW index and filter-aware search.**
 
-> **Status: pre-alpha, Phase 2 of 6 done.** The two-tower model trains on MovieLens ([logQ results](docs/benchmarks.md#logq-ablation-phase-1)) and the from-scratch HNSW index reaches 0.964 recall@10 on SIFT1M ([results](docs/benchmarks.md#raw-ann-scalar-core-phase-2)). It is still scalar and single-threaded; filtered search is not implemented yet. See the [roadmap](PLAN.md#6-phases).
+> **Status: pre-alpha, Phase 3 of 6 done.** The two-tower model trains on MovieLens ([logQ results](docs/benchmarks.md#logq-ablation-phase-1)). The from-scratch HNSW index has AVX2 kernels and a parallel build: on SIFT1M it builds faster than hnswlib and FAISS and leads with all threads, but trails by 4-7% single-threaded ([comparison](docs/benchmarks.md#raw-ann-comparison-phase-3)). Filtered search is not implemented yet. See the [roadmap](PLAN.md#6-phases).
 
 ## What it is
 
@@ -56,8 +56,8 @@ pip install hopfilter-ann
 | 0 | Foundation: build, packaging, CI, docs | Done |
 | 1 | Two-tower baseline on MovieLens, logQ ablation | Done: logQ recall@50 0.109 vs 0.039 without |
 | 2 | HNSW core, about 0.95 recall@10 on SIFT1M | Done: 0.964 at efSearch 64 |
-| 3 | SIMD kernels, memory layout, parallel build | Next |
-| 4 | Filtered search: post, pre, in-graph, adaptive | Planned |
+| 3 | SIMD kernels, prefetch, parallel build | Done: fastest build, +16% QPS at 16 threads, -6% at 1 thread vs hnswlib |
+| 4 | Filtered search: post, pre, in-graph, adaptive | Next |
 | 5 | Pipeline, CLI, reproducible benchmarks vs FAISS and hnswlib | Planned |
 | 6 | Wheels on PyPI, docs site, v0.1.0 | Planned |
 

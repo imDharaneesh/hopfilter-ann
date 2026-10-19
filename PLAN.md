@@ -258,6 +258,7 @@ Each phase ends with a written summary of what was built and the measured result
 - AVX2/FMA kernels with runtime dispatch, aligned contiguous layout for vectors and level-0 neighbor lists, software prefetch, parallel build with fine-grained locks.
 - Profile (`perf` on Linux; VTune or Windows Performance Analyzer locally). Record the speedup of each optimization separately in `docs/benchmarks.md`.
 - **Exit:** QPS and memory table against hnswlib and FAISS HNSW at matched recall, with gaps explained honestly.
+- **Outcome:** done. On SIFT1M at matched recall, hopfilter builds fastest (107 s on 16 threads, against 113 s for hnswlib and 128 s for FAISS) and leads with all threads (+16% over hnswlib at recall 0.95). It still trails single-threaded by 4-7%; the likely cause is the separate vector and link arrays plus two indirect calls per distance. The optimization log, the caveats (the Windows FAISS wheel has no SIMD) and the reverted experiment are in [`docs/benchmarks.md`](docs/benchmarks.md#optimization-log-phase-3). The interleaved level-0 layout from the plan was not built; it is the next lever for the single-thread gap.
 
 ### Phase 4: Filtered search (week 5)
 
@@ -389,7 +390,7 @@ Summary; the full protocol is in [`docs/benchmarks.md`](docs/benchmarks.md).
 | 0. Foundation | Done |
 | 1. Two-tower baseline | Done; follow-ups: early stopping, temperature sweep, MovieLens-25M run |
 | 2. HNSW core | Done; sanitizer results come from CI |
-| 3. Performance | Not started |
+| 3. Performance | Done; single-thread gap of 4-7% to hnswlib remains |
 | 4. Filtered search | Not started |
 | 5. Pipeline and benchmarks | Not started |
 | 6. Release | Not started |

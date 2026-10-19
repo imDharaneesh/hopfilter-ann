@@ -118,6 +118,33 @@ git ls-files 'core/src/*.cpp' 'tests/cpp/*.cpp' | xargs uv run clang-tidy -p bui
 
 On Windows, generate the database from a Visual Studio developer prompt (`vcvars64.bat`) with `-G Ninja -DCMAKE_CXX_COMPILER=cl`, and clang-tidy then checks against the MSVC standard library. Avoid a MinGW compile database: clang's parser lags the newest GCC libstdc++ headers.
 
+## Benchmarks
+
+The runners live in `benchmarks/runners/` and read YAML configs from `benchmarks/configs/`. Results go to `benchmarks/results/` and are committed together with the command that produced them.
+
+```bash
+uv run hopfilter download sift-128-euclidean
+uv run python benchmarks/runners/ann_recall.py --config benchmarks/configs/sift1m.yaml
+```
+
+To compare against hnswlib and FAISS, install the `compare` group. It is kept out of `dev` because hnswlib only ships as source and compiles on install. On Windows, set `CL=/arch:AVX2` first; otherwise MSVC builds hnswlib with SSE only and the comparison would be unfair to it:
+
+```bash
+uv sync --group compare
+uv run python benchmarks/runners/ann_compare.py --config benchmarks/configs/compare_sift1m.yaml
+```
+
+Small search optimizations are measured with the C++ harness, which has no Python in the loop. Export the queries once, build the harness, and alternate two builds to cancel out machine drift:
+
+```bash
+uv run python benchmarks/runners/export_ann_queries.py --dataset sift-128-euclidean
+cmake -S . -B build-bench -DHOPFILTER_BUILD_BENCHMARKS=ON
+cmake --build build-bench --config Release --target hopfilter_search_bench
+build-bench/benchmarks/cpp/Release/hopfilter_search_bench data/indexes/<index>.hopf data/sift-128-euclidean/sift-128-euclidean.queries.bin data/sift-128-euclidean/sift-128-euclidean.truth.bin 10 64 5
+```
+
+The arguments after the three paths are k, efSearch, repeats, and optionally `scalar` to force the scalar kernels. From Python, `hopfilter._core.use_simd_kernels("scalar")` does the same, and `add` / `search` take `threads=` (0 = all cores, 1 = deterministic build).
+
 ## Docker
 
 ```bash
