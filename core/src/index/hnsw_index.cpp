@@ -62,6 +62,16 @@ SearchResults HnswIndex::search(std::span<const float> query,
     return strategy.search(context, preparedQuery, k, request);
 }
 
+FilterPlan HnswIndex::planFor(std::span<const float> query,
+                              const SearchRequest& request,
+                              const AdaptiveStrategy& strategy) const {
+    validateDimension(query);
+    const auto preparedQuery = prepared(query);
+    const auto lease = visitedPool_.acquire();
+    const SearchContext context{*graph_, distances_, lease.get()};
+    return strategy.planFor(context, preparedQuery, request);
+}
+
 void HnswIndex::setCategoricalAttribute(std::string name, CategoricalColumn codes) {
     validateColumnLength(name, codes.size());
     attributes_.setCategorical(std::move(name), std::move(codes));

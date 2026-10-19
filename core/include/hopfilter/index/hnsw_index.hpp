@@ -20,6 +20,7 @@
 #include <hopfilter/graph/node_locks.hpp>
 #include <hopfilter/index/index_config.hpp>
 #include <hopfilter/index/interfaces.hpp>
+#include <hopfilter/search/adaptive_strategy.hpp>
 #include <hopfilter/search/search_context.hpp>
 #include <hopfilter/search/search_strategy.hpp>
 #include <hopfilter/storage/vector_store.hpp>
@@ -52,6 +53,10 @@ public:
                                        std::size_t k,
                                        const SearchRequest& request,
                                        const SearchStrategy& strategy) const;
+
+    [[nodiscard]] FilterPlan planFor(std::span<const float> query,
+                                     const SearchRequest& request,
+                                     const AdaptiveStrategy& strategy) const;
 
     void setCategoricalAttribute(std::string name, CategoricalColumn codes);
     void setNumericAttribute(std::string name, NumericColumn values);

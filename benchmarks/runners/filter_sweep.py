@@ -7,7 +7,7 @@ slab of the space and most queries sit far from it. A filter ``attribute <= s`` 
 matches a share ``s`` of the items. For every attribute, selectivity, strategy and
 efSearch the runner records recall@k against exact filtered ground truth, all-thread
 QPS (median of several repeats) and the mean number of results returned, which exposes
-post-filter shortfalls. Adaptive rows also record the plan it chose.
+post-filter shortfalls. Adaptive rows also record how many queries went to each strategy.
 
 Usage:
     uv run python benchmarks/runners/filter_sweep.py --config benchmarks/configs/filter_sift1m.yaml
@@ -19,6 +19,7 @@ import platform
 import statistics
 import subprocess
 import time
+from collections import Counter
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Literal
@@ -70,6 +71,7 @@ class SweepRow:
     mean_results: float
     qps: dict[str, float]
     plan: str
+    plan_counts: dict[str, int]
 
 
 def load_dataset(config: FilterSweepConfig) -> AnnBenchmarkDataset:
@@ -180,6 +182,11 @@ def measure(
     run: tuple[str, int],
 ) -> SweepRow:
     strategy, ef = run
+    counts = (
+        dict(Counter(index.plan_queries(queries, case.filter, ef)))
+        if strategy == "adaptive"
+        else {strategy: len(queries)}
+    )
     call = SearchCall(config.k, ef, config.search_threads, case.filter, strategy)
     call.run(index, queries[: config.warmup_queries])
     found, qps = timed_qps(index, queries, call, config)
@@ -192,7 +199,8 @@ def measure(
         recall=recall_at_k(found, case.truth, config.k),
         mean_results=float((found >= 0).sum(axis=1).mean()),
         qps=qps,
-        plan=index.plan_filter(case.filter, ef) if strategy == "adaptive" else strategy,
+        plan=max(counts, key=counts.__getitem__),
+        plan_counts=counts,
     )
 
 
@@ -240,7 +248,7 @@ def report(row: SweepRow, k: int) -> str:
     return (
         f"  {row.attribute:>9} s={row.selectivity:<6} {row.strategy:>11} ef={row.ef_search:>4}"
         f"  recall@{k}={row.recall:.4f}  results={row.mean_results:5.2f}"
-        f"  qps={row.qps['median']:9.0f}  plan={row.plan}"
+        f"  qps={row.qps['median']:9.0f}  plans={row.plan_counts}"
     )
 
 

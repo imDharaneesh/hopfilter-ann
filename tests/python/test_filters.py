@@ -137,6 +137,24 @@ def test_adaptive_plans_follow_selectivity(index: HnswIndex) -> None:
     assert index.plan_filter(Filter.mask(rows < 5)) == "pre_filter"
 
 
+def test_queries_far_from_the_matches_plan_exact_search() -> None:
+    corner = np.full(DIMENSION, 2.0, dtype=np.float32)
+    distance_to_corner = ((DATA - corner) ** 2).sum(axis=1).astype(np.float64)
+    index = HnswIndex(DIMENSION, POINTS, max_neighbors=12, ef_construction=100)
+    index.add(DATA)
+    index.set_attribute("corner", distance_to_corner)
+    near_corner = Filter.between("corner", 0.0, float(np.quantile(distance_to_corner, 0.1)))
+    queries = np.stack([corner, -corner])
+
+    assert index.plan_filter(near_corner) == "in_graph"
+    assert index.plan_queries(queries, near_corner) == ["in_graph", "pre_filter"]
+    ids, _ = index.search(queries, K, filter=near_corner)
+    truth = exact_filtered(
+        DATA, queries, distance_to_corner <= np.quantile(distance_to_corner, 0.1), K
+    )
+    assert [set(row.tolist()) for row in ids] == truth
+
+
 def test_unfiltered_search_is_unchanged(index: HnswIndex, data: FloatMatrix) -> None:
     default_ids, _ = index.search(data[:10], K)
     explicit_ids, _ = index.search(data[:10], K, strategy="unfiltered")

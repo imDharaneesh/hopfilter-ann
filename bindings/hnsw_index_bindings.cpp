@@ -191,6 +191,23 @@ std::string planFor(const HnswIndex& index, const FilterExpression& filter, std:
         filterPlanName(adaptive->plan(SearchRequest{ef, predicate.get()}, index.size()))};
 }
 
+std::vector<std::string> planQueries(const HnswIndex& index,
+                                     const FloatMatrix& queries,
+                                     const FilterExpression& filter,
+                                     std::size_t ef) {
+    requireMatrixOf(queries, index.dimension(), "queries");
+    const auto predicate = filter.compile(index.attributes());
+    const auto adaptive = AdaptiveStrategy::withDefaults();
+    const SearchRequest request{ef, predicate.get()};
+    std::vector<std::string> plans;
+    plans.reserve(static_cast<std::size_t>(queries.shape(0)));
+    for (py::ssize_t query = 0; query < queries.shape(0); ++query) {
+        const auto plan = index.planFor(row(queries, query, index.dimension()), request, *adaptive);
+        plans.emplace_back(filterPlanName(plan));
+    }
+    return plans;
+}
+
 std::size_t countMatching(const HnswIndex& index, const FilterExpression& filter) {
     const auto predicate = filter.compile(index.attributes());
     std::vector<NodeId> matches;
@@ -248,6 +265,11 @@ void bindHnswIndex(py::module_& module) {
              py::arg("strategy") = std::string{kAdaptiveStrategyName})
         .def("set_attribute", &setAttribute, py::arg("name"), py::arg("values"))
         .def("plan_filter", &planFor, py::arg("filter"), py::arg("ef") = kDefaultEfSearch)
+        .def("plan_queries",
+             &planQueries,
+             py::arg("queries"),
+             py::arg("filter"),
+             py::arg("ef") = kDefaultEfSearch)
         .def("count_matching", &countMatching, py::arg("filter"))
         .def_property_readonly("attribute_names",
                                [](const HnswIndex& index) { return index.attributes().names(); })

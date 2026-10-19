@@ -103,7 +103,14 @@ class HnswIndex:
         """
 
     def plan_filter(self, filter: Filter, ef: int = 64) -> str:
-        """Name of the strategy ``adaptive`` would run for ``filter`` at this ``ef``."""
+        """Strategy ``adaptive`` picks for ``filter`` from global selectivity alone."""
+
+    def plan_queries(self, queries: npt.ArrayLike, filter: Filter, ef: int = 64) -> list[str]:
+        """Strategy ``adaptive`` would run for each query, after its neighbourhood check.
+
+        Differs from ``plan_filter`` only for in-graph plans: a query whose neighbourhood
+        holds far fewer matches than the filter overall is sent to ``pre_filter``.
+        """
 
     def count_matching(self, filter: Filter) -> int:
         """Exact number of stored vectors that match ``filter``."""
