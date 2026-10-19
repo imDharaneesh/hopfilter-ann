@@ -1,7 +1,7 @@
 # Benchmarks
 
 !!! note "Status"
-    The [logQ ablation](#logq-ablation-phase-1), the [scalar HNSW core](#raw-ann-scalar-core-phase-2), the [optimization log](#optimization-log-phase-3) and the [comparison with hnswlib and FAISS](#raw-ann-comparison-phase-3) have results. The filtered-search tables are still templates, filled in from Phase 4 onward, each with the exact command and commit that produced it. A number without a reproducible command is not published.
+    The [logQ ablation](#logq-ablation-phase-1), the [scalar HNSW core](#raw-ann-scalar-core-phase-2), the [optimization log](#optimization-log-phase-3), the [comparison with hnswlib and FAISS](#raw-ann-comparison-phase-3) and [filtered search](#filtered-search-phase-4) have results. The [filtered-search sweep](#filtered-search-phase-4) covers synthetic attributes on SIFT1M; real attributes follow with the Phase 5 pipeline. Every table states the command and commit that produced it. A number without a reproducible command is not published.
 
 ## Principles
 
@@ -50,12 +50,14 @@ Datasets are downloaded by scripts into `data/` and never committed or redistrib
 
 ## Filtered search sweep
 
-Each item gets synthetic attributes with controlled selectivity, so that a filter matches exactly 100%, 50%, 10%, 1% or 0.1% of items. Both of these are measured:
+Each SIFT1M item gets two synthetic numeric attributes, and a filter `attribute <= threshold` is set so that it matches exactly 100%, 50%, 10%, 1% or 0.1% of the items:
 
-- **Uncorrelated filters**, where matching items are scattered at random relative to the query.
-- **Correlated filters**, built from real attributes (genre, category), where matching items cluster in vector space.
+- **`random`**: uniform noise. Matching items are scattered evenly through the vector space, so every query has matching neighbours close by.
+- **`clustered`**: the item's normalized rank along a fixed random direction. Matching items form one slab at the end of that direction, so for most queries the nearest matching items are far away and unrelated to the unfiltered neighbours. This is the hard case for any strategy that starts from the unfiltered neighbourhood.
 
-Strategies compared at each selectivity: `PostFilter`, `PreFilter`, `InGraph`, `Adaptive`, plus FAISS and hnswlib with their own filtering support where available.
+Ground truth is exact brute force over the matching items only. The four strategies (`post_filter`, `in_graph`, `pre_filter`, `adaptive`) run on the same index (M=16, efConstruction=200) with efSearch in {10, 16, 32, 64, 128, 256, 512}; `pre_filter` is exact and ignores efSearch. Each point records recall@10, the median QPS of three runs on all threads after a 100-query warm-up, and the mean number of results returned. Points where one pass takes more than 10 s are measured once.
+
+Real attributes (MovieLens genres and years, Amazon categories) arrive with the Phase 5 pipeline, which builds an index over trained item embeddings. FAISS and hnswlib filtering are not compared yet: hnswlib's filter is a Python callback per visited node, which would measure the binding rather than the algorithm.
 
 ## Hardware record
 
@@ -244,13 +246,46 @@ On Windows, set `CL=/arch:AVX2` before `uv sync` so hnswlib is compiled with AVX
 
 ### Filtered search (Phase 4)
 
-| Selectivity | Strategy | recall@10 | QPS | Mean results returned |
-|---|---|---|---|---|
-| 100% | | | | |
-| 50% | | | | |
-| 10% | | | | |
-| 1% | | | | |
-| 0.1% | | | | |
+SIFT1M, the Phase 3 index (M=16, efConstruction=200), k=10, 1,000 queries, all 16 threads, AVX2 kernels, AMD Ryzen (Family 25 Model 68), Windows 11, commit `caed24e`. Each cell is the highest QPS a strategy reaches at recall@10 >= 0.95, with the recall and efSearch of that point. Where a strategy never gets there, the cell gives its best recall and the mean number of results it returned. **Bold** marks the best cell in each row.
+
+| Attribute | Matches | Post-filter | In-graph | Pre-filter (exact) | Adaptive (plan) |
+|---|---|---|---|---|---|
+| random | 100% | 15,611 (0.960, ef 64) | **17,448** (0.960, ef 64) | 42 (1.000) | 17,031 (0.960, ef 64; post-filter) |
+| random | 50% | **10,799** (0.982, ef 128) | 9,546 (0.983, ef 64) | 62 (1.000) | 9,687 (0.983, ef 64; in-graph) |
+| random | 10% | 5,433 (0.984, ef 256) | 7,793 (0.958, ef 16) | 361 (1.000) | **8,101** (0.958, ef 16; in-graph) |
+| random | 1% | best 0.508, 5.1 results | 1,377 (0.986, ef 10) | 1,874 (1.000) | **2,127** (1.000; exact) |
+| random | 0.1% | best 0.054, 0.5 results | 154 (0.999, ef 10) | 2,624 (1.000) | **3,035** (1.000; exact) |
+| clustered | 100% | **21,931** (0.960, ef 64) | 19,371 (0.960, ef 64) | 41 (1.000) | 19,943 (0.960, ef 64; post-filter) |
+| clustered | 50% | best 0.904, 9.1 results | 1,230 (0.979, ef 64) | 65 (1.000) | **1,341** (0.979, ef 64; in-graph) |
+| clustered | 10% | best 0.542, 5.5 results | 185 (0.963, ef 16) | **356** (1.000) | 184 (0.963, ef 16; in-graph) |
+| clustered | 1% | best 0.159, 1.6 results | 38 (0.992, ef 10) | 2,015 (1.000) | **2,058** (1.000; exact) |
+| clustered | 0.1% | best 0.021, 0.2 results | 10 (0.997, ef 10) | 2,809 (1.000) | **2,889** (1.000; exact) |
+
+![Recall vs QPS per selectivity for the four filtered strategies on SIFT1M](https://raw.githubusercontent.com/imDharaneesh/hopfilter-ann/master/benchmarks/plots/filter_sift1m.png)
+
+Differences under about 15% are run-to-run noise on this machine. At 1% and below, adaptive and exact search run the same code, so the gap between them there (up to 16%) is that noise and nothing else.
+
+**Where each strategy belongs.**
+
+- **Post-filter** is the right tool only when nearly everything matches. At 50% it is the fastest on the uniform attribute, but on the clustered one it never passes recall 0.90 and returns short lists (9.1 results instead of 10). Below 10% it collapses on both. Its failure mode is silent: fewer and worse results, never an error.
+- **In-graph** search keeps recall high at every selectivity, because non-matching nodes still route. Its cost grows as `ef / selectivity` (it stops only once `ef` matching nodes are found), so it is the best choice from about 2% to 50% when matching items are spread out, and too slow at 1% and below.
+- **Pre-filter** (exact) costs a column scan plus one distance per matching item, so it is the fastest option at 1% and below and useless above 10%.
+
+**Where adaptive wins.** It is the best or within noise of the best in 8 of 10 rows, and it never returns a short or low-recall result list. The threshold change in `a8f4165` matters here: with the original 0.5 cut-off, sampling noise sent the 50% uniform filter to post-filter and the 50% clustered filter to in-graph, so the same selectivity could land on either side.
+
+**Where adaptive loses.**
+
+- **Clustered attribute at 10%:** adaptive picks in-graph (185 QPS at recall 0.963), but exact search is twice as fast and exact. When the matching items sit far from the query, in-graph search crosses most of the graph before it finds `ef` matches. Selectivity alone cannot see this; the fix is a query-local estimate, such as the share of matches among the query's unfiltered neighbours.
+- **Uniform attribute at 50%:** adaptive's in-graph pick is about 10% slower than post-filtering. That is the deliberate price of the 0.9 cut-off, which buys protection against the clustered case in the row below it.
+
+Not measured yet: selectivities between 50% and 100% (the post-filter cut-off of 0.9 is set conservatively, not measured), real attributes (Phase 5), and FAISS or hnswlib filtering.
+
+Reproduce:
+
+```bash
+uv run python benchmarks/runners/filter_sweep.py --config benchmarks/configs/filter_sift1m.yaml
+uv run python benchmarks/plots/plot_filter_sweep.py --results benchmarks/results/filter_sift1m.json --output benchmarks/plots/filter_sift1m.png
+```
 
 ## Reproducing
 

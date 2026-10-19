@@ -458,11 +458,11 @@ classDiagram
 | `unfiltered` | `UnfilteredStrategy` | Rejects a request that carries one | Fastest path | n/a |
 | `post_filter` | `PostFilterStrategy` | Searches with `ef = max(efSearch, k * overFetchFactor)`, then drops non-matching results | Free when most items match | Returns fewer than `k` results under strict filters |
 | `pre_filter` | `PreFilterStrategy` | Collects the matching ids and ranks them by brute force | Exact; cheap when very few items match | O(N) predicate checks plus O(matching * d) distances per query |
-| `in_graph` | `InGraphStrategy` | Traverses the full graph; every node can route, only matching nodes enter the result heap; widens `ef` while the rejection rate is high | Keeps graph connectivity under medium selectivity | Visits more nodes than unfiltered search; degrades toward a scan as matches get rare |
+| `in_graph` | `InGraphStrategy` | Traverses the full graph; every node can route, only matching nodes enter the result heap; can widen `ef` while the rejection rate is high (off by default) | Keeps graph connectivity under medium selectivity | Visits more nodes than unfiltered search; degrades toward a scan as matches get rare |
 | `adaptive` | `AdaptiveStrategy` | Samples selectivity, then delegates | Picks the cheapest correct option | Estimation cost per query; thresholds need tuning |
 
 - `HnswIndex` uses `adaptive` unless the builder injects another strategy. A request without a filter goes straight to the unfiltered path, so unfiltered searches pay nothing for filter support.
-- `AdaptiveStrategy::plan` returns the `FilterPlan` it would use (`Unfiltered`, `PostFilter`, `InGraph` or `Exact`). The rule: selectivity at or above `postFilterAbove` uses the post-filter, below `exactBelow` uses exact search, and anything in between uses in-graph search. Both thresholds live in `FilteredSearchConfig`, with defaults taken from the Phase 4 sweep.
+- `AdaptiveStrategy::plan` returns the `FilterPlan` it would use (`Unfiltered`, `PostFilter`, `InGraph` or `Exact`). The rule: selectivity at or above `postFilterAbove` uses the post-filter, below `exactBelow` uses exact search, and anything in between uses in-graph search. Both thresholds live in `FilteredSearchConfig`; the defaults (`postFilterAbove = 0.9`, `exactBelow = 0.015`) come from the Phase 4 sweep. Selectivity alone cannot see whether matching items cluster away from the query, which is where adaptive search still loses (see [benchmarks](benchmarks.md#filtered-search-phase-4)).
 - `HnswIndex::search` has an overload that takes a `const SearchStrategy&`, which is how the benchmarks and the Python `strategy=` argument run one index under every strategy.
 - `SearchContext` gives a strategy read-only access to the index internals plus a per-thread `VisitedSet`. Strategies therefore stay stateless, and one strategy instance serves all threads.
 
@@ -496,7 +496,9 @@ All follow Malkov and Yashunin (arXiv:1603.09320). Only the shape is described h
 
 **searchLayer(q, entries, ef)** is a best-first search with a min-heap of candidates and a bounded max-heap of results. It stops when the closest unexplored candidate is farther than the farthest kept result.
 
-**Filtered searchLayer** (`InGraphStrategy`) adds two rules. A node always enters the candidate heap, so it can still be used to route. A node enters the result heap only if `filter.matches(id)`. After every `rejectionWindow` expansions, if the share of rejected nodes is above a threshold, `ef` grows by `efGrowthFactor` up to `maxEf`.
+**Filtered searchLayer** (`InGraphStrategy`) adds two rules. A node always enters the candidate heap, so it can still be used to route. A node enters the result heap only if `filter.matches(id)`. Optionally, after every `rejectionWindow` visited nodes, if the share of rejected nodes is above `rejectionThreshold`, `ef` grows by `efGrowthFactor` up to `maxEf`. A growth factor of 1 turns this off, and that is the default: on SIFT1M it made every query run at `maxEf` (see the [decision log](#12-decision-log)).
+
+The search stops when the closest unexplored candidate is farther than the `ef`-th closest *matching* node found so far. That node sits at roughly rank `ef / selectivity` among all nodes, so the work grows as `ef / selectivity`: cheap at 10%, close to a full scan at 0.1%. This is the cost model `AdaptiveStrategy` encodes, and why it switches to exact search when fewer than `ef` items are expected to match.
 
 ---
 
@@ -817,3 +819,9 @@ classDiagram
 | 18 | 2026-10-18 | Striped node locks (65,536 mutexes) instead of one mutex per node | A `std::mutex` is 80 bytes on MSVC, so one per node would cost 80 MB at 1M nodes; stripes cost 5 MB and two nodes rarely share a stripe |
 | 19 | 2026-10-18 | Parallel build assigns ids before linking | Callers rely on row *i* becoming id *i*; assigning ids in whatever order threads finish would break that |
 | 20 | 2026-10-18 | Comparison libraries live in a `compare` dependency group, outside `dev` | hnswlib only ships a source distribution and compiles on install; keeping it out of the default environment keeps `uv sync` and CI fast |
+| 21 | 2026-10-19 | In-graph `ef` widening exists but is off by default | The rejection rate is just `1 - selectivity`, so below 10% selectivity the rule fired on every window and every query ran at `maxEf`: 158 QPS at recall 1.0 whatever `efSearch` was, against 10,976 QPS at 0.92 and 3,949 at 0.99 without it (SIFT1M, 16 threads) |
+| 22 | 2026-10-19 | Adaptive search goes exact when fewer items are expected to match than `ef` | In-graph search stops only after `ef` matching nodes are found, so with fewer matches than that it walks the whole reachable graph; the exact scan is cheaper and returns recall 1 |
+| 23 | 2026-10-19 | Adaptive thresholds 0.9 (post-filter) and 0.015 (exact) | At 50% selectivity post-filtering stayed below recall 0.90 on a clustered attribute while in-graph reached 0.98; at 1% exact search already beat in-graph. A wrong in-graph pick costs QPS, a wrong post-filter pick costs recall, so the post-filter cut-off is set high |
+| 24 | 2026-10-19 | A filter is compiled once per `search` call, not per query | Every query in a batch shares the filter, so the predicate tree is built once and read concurrently; per-query compilation would allocate inside the parallel loop |
+| 25 | 2026-10-19 | `Filter` raises on `bool()` | `a and b` on two filters would silently evaluate to `b`; raising makes the mistake loud and points to `&`, `\|` and `~` |
+| 26 | 2026-10-19 | clang-tidy `misc-no-recursion` disabled | Filter expressions are trees and are compiled and described recursively; an explicit stack would be longer and harder to read for depths that stay in single digits |

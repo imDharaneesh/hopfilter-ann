@@ -269,6 +269,7 @@ Each phase ends with a written summary of what was built and the measured result
 - Read ACORN and related filtered-ANN papers for ideas, then implement independently.
 - Sweep selectivity at 100%, 50%, 10%, 1% and 0.1% on item attributes (MovieLens genres and years, Amazon categories).
 - **Exit:** recall-versus-QPS curves per selectivity for all four strategies, with a clear statement of where Adaptive wins and loses.
+- **Outcome:** done on SIFT1M with two synthetic attributes, one uniform and one clustered in vector space. Adaptive is the best strategy, or within noise of it, in 8 of 10 selectivity/attribute cells and never returns short lists. It loses 2x to exact search on the clustered attribute at 10%, because selectivity cannot tell that the matches sit far from the query, and about 10% to post-filtering on the uniform attribute at 50%, the price of a conservative post-filter cut-off. In-graph ef widening was built as planned but is off by default: it pushed every query to `maxEf`. Real attributes (MovieLens, Amazon) move to Phase 5 with the pipeline that builds item indexes. Details in [`docs/benchmarks.md`](docs/benchmarks.md#filtered-search-phase-4).
 
 ### Phase 5: Pipeline and benchmarks (week 6)
 
@@ -391,6 +392,6 @@ Summary; the full protocol is in [`docs/benchmarks.md`](docs/benchmarks.md).
 | 1. Two-tower baseline | Done; follow-ups: early stopping, temperature sweep, MovieLens-25M run |
 | 2. HNSW core | Done; sanitizer results come from CI |
 | 3. Performance | Done; single-thread gap of 4-7% to hnswlib remains |
-| 4. Filtered search | Not started |
+| 4. Filtered search | Done; follow-ups: query-local selectivity for clustered filters, real-attribute sweep in Phase 5 |
 | 5. Pipeline and benchmarks | Not started |
 | 6. Release | Not started |

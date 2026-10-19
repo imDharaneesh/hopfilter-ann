@@ -7,7 +7,7 @@
 
 **Two-tower retrieval with a from-scratch HNSW index and filter-aware search.**
 
-> **Status: pre-alpha, Phase 3 of 6 done.** The two-tower model trains on MovieLens ([logQ results](docs/benchmarks.md#logq-ablation-phase-1)). The from-scratch HNSW index has AVX2 kernels and a parallel build: on SIFT1M it builds faster than hnswlib and FAISS and leads with all threads, but trails by 4-7% single-threaded ([comparison](docs/benchmarks.md#raw-ann-comparison-phase-3)). Filtered search is not implemented yet. See the [roadmap](PLAN.md#6-phases).
+> **Status: pre-alpha, Phase 4 of 6 done.** The two-tower model trains on MovieLens ([logQ results](docs/benchmarks.md#logq-ablation-phase-1)). The from-scratch HNSW index has AVX2 kernels and a parallel build: on SIFT1M it builds faster than hnswlib and FAISS and leads with all threads, but trails by 4-7% single-threaded ([comparison](docs/benchmarks.md#raw-ann-comparison-phase-3)). Filtered search picks post-filtering, in-graph traversal or exact search per query; on SIFT1M it is the best choice or within noise of it in 8 of 10 selectivity settings and loses 2x when matching items cluster far from the query ([filtered results](docs/benchmarks.md#filtered-search-phase-4)). See the [roadmap](PLAN.md#6-phases).
 
 ## What it is
 
@@ -17,7 +17,7 @@ Recommendation and search systems retrieve a few hundred candidates out of milli
 |---|---|---|
 | **Two-tower model** | PyTorch | Learns user and item vectors with in-batch negatives and **logQ correction** for popularity bias |
 | **HNSW index** | C++20 + pybind11 | Layered proximity graph, written from the Malkov and Yashunin paper with no code from other libraries |
-| **Filtered search** | C++20 | Evaluates filters *during* graph traversal, adapts the search width to selectivity, and falls back to exact search when only a handful of items match |
+| **Filtered search** | C++20 | Evaluates filters *during* graph traversal, picks the strategy per query from estimated selectivity, and falls back to exact search when only a handful of items match |
 
 ### Why filtered search is the focus
 
@@ -27,7 +27,7 @@ Recommendation and search systems retrieve a few hundred candidates out of milli
 | Pre-filter (search only matching items) | The graph loses connectivity and search degrades to a slow scan |
 | **hopfilter: in-graph + adaptive** | Non-matching nodes still route the search but never enter the results; the strategy is chosen per query from estimated selectivity |
 
-The aim is to be competitive with FAISS and hnswlib on recall, and measurably better on filtered queries at specific selectivities. Results will be published in [docs/benchmarks.md](docs/benchmarks.md), including where hopfilter trails.
+The aim is to be competitive with FAISS and hnswlib on recall, and measurably better on filtered queries at specific selectivities. Results are in [docs/benchmarks.md](docs/benchmarks.md), including where hopfilter trails.
 
 ## Quick start (from source)
 
@@ -43,6 +43,25 @@ uv run pytest
 
 `uv sync` builds the C++ extension and installs pinned dev tools. Details are in [docs/development.md](docs/development.md).
 
+### Filtered search
+
+```python
+import numpy as np
+from hopfilter import Filter, HnswIndex
+
+vectors = np.random.default_rng(0).standard_normal((100_000, 64)).astype(np.float32)
+index = HnswIndex(dimension=64, capacity=len(vectors), metric="l2")
+index.add(vectors)
+index.set_attribute("category", np.arange(len(vectors)) % 50)
+index.set_attribute("price", np.random.default_rng(1).uniform(1, 500, len(vectors)))
+
+in_budget = Filter.equals("category", 7) & Filter.between("price", 10.0, 80.0)
+ids, distances = index.search(vectors[:5], k=10, filter=in_budget)
+print(index.plan_filter(in_budget))
+```
+
+Integer columns are categorical and float columns are numeric. `strategy=` forces one of `post_filter`, `in_graph` or `pre_filter`; the default, `adaptive`, picks one per query from the filter's estimated selectivity. `plan_filter` prints which one it would use. Attributes are saved and loaded with the index.
+
 Once v0.1.0 is released:
 
 ```bash
@@ -57,8 +76,8 @@ pip install hopfilter-ann
 | 1 | Two-tower baseline on MovieLens, logQ ablation | Done: logQ recall@50 0.109 vs 0.039 without |
 | 2 | HNSW core, about 0.95 recall@10 on SIFT1M | Done: 0.964 at efSearch 64 |
 | 3 | SIMD kernels, prefetch, parallel build | Done: fastest build, +16% QPS at 16 threads, -6% at 1 thread vs hnswlib |
-| 4 | Filtered search: post, pre, in-graph, adaptive | Next |
-| 5 | Pipeline, CLI, reproducible benchmarks vs FAISS and hnswlib | Planned |
+| 4 | Filtered search: post, pre, in-graph, adaptive | Done: adaptive best or tied in 8 of 10 SIFT1M settings |
+| 5 | Pipeline, CLI, reproducible benchmarks vs FAISS and hnswlib | Next |
 | 6 | Wheels on PyPI, docs site, v0.1.0 | Planned |
 
 ## Repository layout
