@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstddef>
 #include <memory>
 #include <span>
@@ -18,6 +19,12 @@
 #include <hopfilter/search/strategy_registry.hpp>
 
 namespace hopfilter {
+namespace {
+
+constexpr std::size_t kIndexShareProbed = 16;
+constexpr std::size_t kMinimumProbe = 16;
+
+}
 
 std::string_view filterPlanName(FilterPlan plan) noexcept {
     switch (plan) {
@@ -103,7 +110,9 @@ bool AdaptiveStrategy::matchesLookDistant(const SearchContext& context,
     if (!start) {
         return false;
     }
-    const double localShare = neighbourhoodShare(context, start->id, filter, localProbe_);
+    const std::size_t probeSize =
+        std::min(localProbe_, std::max(kMinimumProbe, context.graph().size() / kIndexShareProbed));
+    const double localShare = neighbourhoodShare(context, start->id, filter, probeSize);
     return localShare < thresholds_.distantShare * selectivity;
 }
 
