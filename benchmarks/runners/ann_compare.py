@@ -1,6 +1,7 @@
 """Compare hopfilter, hnswlib and FAISS HNSW on one ANN-Benchmarks dataset.
 
-Every library is built with the same M and efConstruction and the same thread count,
+Every library runs in its own process, so memory growth and thermal state do not carry
+over between libraries, and is built with the same M, efConstruction and thread count,
 then swept over efSearch. Recall@k, single-thread and all-thread QPS (median of
 repeats), build time and the resident-memory growth of the build are recorded.
 
@@ -14,6 +15,8 @@ import json
 import platform
 import statistics
 import subprocess
+import sys
+import tempfile
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -242,14 +245,35 @@ def environment() -> dict[str, object]:
     }
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", type=Path, required=True)
-    config = load_config(parser.parse_args().config, CompareConfig)
+def run_in_child(name: LibraryName, config_path: Path, scratch: Path) -> dict[str, object]:
+    partial = scratch / f"{name}.json"
+    command = [sys.executable, __file__, "--config", str(config_path), "--library", name]
+    subprocess.run([*command, "--partial", str(partial)], check=True)
+    result: dict[str, object] = json.loads(partial.read_text(encoding="utf-8"))
+    return result
+
+
+def run_single(config: CompareConfig, name: LibraryName, partial: Path) -> None:
     spec = DATASETS[config.dataset]
     dataset_dir = DatasetDownloader(HttpFetcher(), Path(config.data_dir)).download(spec)
     dataset = load_ann_benchmark(dataset_dir / spec.file_name)
-    results = {name: run_library(name, dataset, config) for name in config.libraries}
+    partial.write_text(json.dumps(run_library(name, dataset, config)), encoding="utf-8")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--config", type=Path, required=True)
+    parser.add_argument("--library", help="run one library in this process (internal)")
+    parser.add_argument("--partial", type=Path, help="where --library writes its result")
+    arguments = parser.parse_args()
+    config = load_config(arguments.config, CompareConfig)
+    if arguments.library is not None:
+        run_single(config, arguments.library, arguments.partial)
+        return
+    with tempfile.TemporaryDirectory() as scratch:
+        results = {
+            name: run_in_child(name, arguments.config, Path(scratch)) for name in config.libraries
+        }
     output = Path(config.results_path)
     output.parent.mkdir(parents=True, exist_ok=True)
     payload = {"config": asdict(config), "environment": environment(), "libraries": results}

@@ -1,0 +1,288 @@
+{
+    "config": {
+        "dataset": "sift-128-euclidean",
+        "results_path": "benchmarks/results/compare_sift1m.json",
+        "libraries": [
+            "hopfilter",
+            "hopfilter_scalar",
+            "hnswlib",
+            "faiss"
+        ],
+        "data_dir": "data",
+        "max_neighbors": 16,
+        "ef_construction": 200,
+        "seed": 42,
+        "k": 10,
+        "ef_search": [
+            16,
+            24,
+            32,
+            48,
+            64,
+            96,
+            128,
+            192,
+            256
+        ],
+        "repeats": 3,
+        "threads": 0
+    },
+    "environment": {
+        "commit": "49c7857f0872491386b1c0b5e4bd0141e0f97ef3",
+        "python": "3.14.3",
+        "platform": "Windows-11-10.0.26200-SP0",
+        "processor": "AMD64 Family 25 Model 68 Stepping 1, AuthenticAMD",
+        "logical_cpus": 16,
+        "memory_gib": 15.8,
+        "hopfilter_simd": "avx2",
+        "hnswlib": "0.8.0",
+        "faiss": "1.15.1",
+        "faiss_simd_level": "NONE"
+    },
+    "libraries": {
+        "hopfilter": {
+            "build_seconds": 106.57795420003822,
+            "memory_growth_mib": 710.12109375,
+            "threads": 16,
+            "sweep": [
+                {
+                    "ef_search": 16,
+                    "recall": 0.80123,
+                    "qps_single_thread": 12329.705194071987,
+                    "qps_all_threads": 63464.54203237683
+                },
+                {
+                    "ef_search": 24,
+                    "recall": 0.8651,
+                    "qps_single_thread": 9483.771749300673,
+                    "qps_all_threads": 48290.74893787983
+                },
+                {
+                    "ef_search": 32,
+                    "recall": 0.9028,
+                    "qps_single_thread": 7799.358690070145,
+                    "qps_all_threads": 39113.2555566274
+                },
+                {
+                    "ef_search": 48,
+                    "recall": 0.9432600000000001,
+                    "qps_single_thread": 6076.839323881259,
+                    "qps_all_threads": 29466.20786189906
+                },
+                {
+                    "ef_search": 64,
+                    "recall": 0.96327,
+                    "qps_single_thread": 4906.632186841339,
+                    "qps_all_threads": 23075.550968219293
+                },
+                {
+                    "ef_search": 96,
+                    "recall": 0.9813000000000001,
+                    "qps_single_thread": 3492.2991834428003,
+                    "qps_all_threads": 15875.792875811501
+                },
+                {
+                    "ef_search": 128,
+                    "recall": 0.98932,
+                    "qps_single_thread": 2726.5656048738147,
+                    "qps_all_threads": 12691.300734911196
+                },
+                {
+                    "ef_search": 192,
+                    "recall": 0.99511,
+                    "qps_single_thread": 1887.4242413712432,
+                    "qps_all_threads": 8959.789896780163
+                },
+                {
+                    "ef_search": 256,
+                    "recall": 0.9972,
+                    "qps_single_thread": 1255.8932318927727,
+                    "qps_all_threads": 6904.356504023699
+                }
+            ]
+        },
+        "hopfilter_scalar": {
+            "build_seconds": 97.47822789999191,
+            "memory_growth_mib": 710.3671875,
+            "threads": 16,
+            "sweep": [
+                {
+                    "ef_search": 16,
+                    "recall": 0.80149,
+                    "qps_single_thread": 11008.954132907564,
+                    "qps_all_threads": 70349.36196088679
+                },
+                {
+                    "ef_search": 24,
+                    "recall": 0.86579,
+                    "qps_single_thread": 8590.001873619176,
+                    "qps_all_threads": 53721.09939233385
+                },
+                {
+                    "ef_search": 32,
+                    "recall": 0.9032600000000001,
+                    "qps_single_thread": 6894.474347873695,
+                    "qps_all_threads": 43921.19658624701
+                },
+                {
+                    "ef_search": 48,
+                    "recall": 0.94359,
+                    "qps_single_thread": 5087.466263755633,
+                    "qps_all_threads": 31688.34889096473
+                },
+                {
+                    "ef_search": 64,
+                    "recall": 0.9632999999999999,
+                    "qps_single_thread": 3973.5754056807928,
+                    "qps_all_threads": 25359.89494988282
+                },
+                {
+                    "ef_search": 96,
+                    "recall": 0.98131,
+                    "qps_single_thread": 2965.881126326735,
+                    "qps_all_threads": 17880.24668962639
+                },
+                {
+                    "ef_search": 128,
+                    "recall": 0.98931,
+                    "qps_single_thread": 2322.451756586441,
+                    "qps_all_threads": 13551.206010353071
+                },
+                {
+                    "ef_search": 192,
+                    "recall": 0.99512,
+                    "qps_single_thread": 1595.4275811299985,
+                    "qps_all_threads": 9195.687259462247
+                },
+                {
+                    "ef_search": 256,
+                    "recall": 0.9972,
+                    "qps_single_thread": 1218.475287511326,
+                    "qps_all_threads": 7242.653143217098
+                }
+            ]
+        },
+        "hnswlib": {
+            "build_seconds": 113.31715399998939,
+            "memory_growth_mib": 814.33203125,
+            "threads": 16,
+            "sweep": [
+                {
+                    "ef_search": 16,
+                    "recall": 0.80195,
+                    "qps_single_thread": 13251.037325016328,
+                    "qps_all_threads": 57093.7891002381
+                },
+                {
+                    "ef_search": 24,
+                    "recall": 0.8653600000000001,
+                    "qps_single_thread": 10379.705185513008,
+                    "qps_all_threads": 44547.418270148824
+                },
+                {
+                    "ef_search": 32,
+                    "recall": 0.9029400000000001,
+                    "qps_single_thread": 8417.58210675979,
+                    "qps_all_threads": 35709.31192037253
+                },
+                {
+                    "ef_search": 48,
+                    "recall": 0.94317,
+                    "qps_single_thread": 6421.323313954593,
+                    "qps_all_threads": 24973.94593094564
+                },
+                {
+                    "ef_search": 64,
+                    "recall": 0.96311,
+                    "qps_single_thread": 5243.969382788503,
+                    "qps_all_threads": 20492.30718876601
+                },
+                {
+                    "ef_search": 96,
+                    "recall": 0.9815400000000001,
+                    "qps_single_thread": 3663.878699282952,
+                    "qps_all_threads": 14639.427960572717
+                },
+                {
+                    "ef_search": 128,
+                    "recall": 0.98931,
+                    "qps_single_thread": 2917.311830187245,
+                    "qps_all_threads": 11257.138714405635
+                },
+                {
+                    "ef_search": 192,
+                    "recall": 0.9951700000000001,
+                    "qps_single_thread": 2049.156686972429,
+                    "qps_all_threads": 8059.3613872636315
+                },
+                {
+                    "ef_search": 256,
+                    "recall": 0.9972099999999999,
+                    "qps_single_thread": 1716.2655099116987,
+                    "qps_all_threads": 6257.587716249832
+                }
+            ]
+        },
+        "faiss": {
+            "build_seconds": 127.63958449999336,
+            "memory_growth_mib": 628.70703125,
+            "threads": 16,
+            "sweep": [
+                {
+                    "ef_search": 16,
+                    "recall": 0.8075300000000001,
+                    "qps_single_thread": 13375.126144749172,
+                    "qps_all_threads": 56598.70106171409
+                },
+                {
+                    "ef_search": 24,
+                    "recall": 0.87347,
+                    "qps_single_thread": 10296.556265087327,
+                    "qps_all_threads": 42221.52792047244
+                },
+                {
+                    "ef_search": 32,
+                    "recall": 0.9107900000000001,
+                    "qps_single_thread": 8243.667647444468,
+                    "qps_all_threads": 33604.600873095726
+                },
+                {
+                    "ef_search": 48,
+                    "recall": 0.94851,
+                    "qps_single_thread": 6027.857623436764,
+                    "qps_all_threads": 25854.50429422786
+                },
+                {
+                    "ef_search": 64,
+                    "recall": 0.9674699999999999,
+                    "qps_single_thread": 4777.7021201750795,
+                    "qps_all_threads": 19943.114261878254
+                },
+                {
+                    "ef_search": 96,
+                    "recall": 0.98345,
+                    "qps_single_thread": 3349.9435819187033,
+                    "qps_all_threads": 14636.203264277548
+                },
+                {
+                    "ef_search": 128,
+                    "recall": 0.99038,
+                    "qps_single_thread": 2604.3873613715423,
+                    "qps_all_threads": 11427.623261966204
+                },
+                {
+                    "ef_search": 192,
+                    "recall": 0.99543,
+                    "qps_single_thread": 1796.9522324418654,
+                    "qps_all_threads": 8120.226119079139
+                },
+                {
+                    "ef_search": 256,
+                    "recall": 0.99731,
+                    "qps_single_thread": 1382.1554880728238,
+                    "qps_all_threads": 6389.675919409839
+                }
+            ]
+        }
+    }
+}
