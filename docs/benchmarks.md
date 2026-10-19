@@ -1,7 +1,7 @@
 # Benchmarks
 
 !!! note "Status"
-    The [logQ ablation](#logq-ablation-phase-1) and the [scalar HNSW core on SIFT1M](#raw-ann-scalar-core-phase-2) have results. The library comparison and filtered-search tables are still templates, filled in from Phase 3 onward, each with the exact command and commit that produced it. A number without a reproducible command is not published.
+    The [logQ ablation](#logq-ablation-phase-1), the [scalar HNSW core](#raw-ann-scalar-core-phase-2), the [optimization log](#optimization-log-phase-3) and the [comparison with hnswlib and FAISS](#raw-ann-comparison-phase-3) have results. The filtered-search tables are still templates, filled in from Phase 4 onward, each with the exact command and commit that produced it. A number without a reproducible command is not published.
 
 ## Principles
 
@@ -171,24 +171,74 @@ uv run python benchmarks/runners/ann_recall.py --config benchmarks/configs/sift1
 
 GloVe is far harder than SIFT for graph indexes, because its angular neighborhoods are less well separated. Reaching 0.95 takes an efSearch of about 500 rather than 50.
 
-### Raw ANN: comparison (Phase 3)
-
-| Dataset | Library | Params | recall@10 | QPS (1 thread) | QPS (all) | p99 (ms) | Build (s) | Memory (MB) |
-|---|---|---|---|---|---|---|---|---|
-| SIFT1M | hopfilter | | | | | | | |
-| SIFT1M | hnswlib | | | | | | | |
-| SIFT1M | FAISS HNSW | | | | | | | |
-
 ### Optimization log (Phase 3)
 
-Each optimization is measured on its own against the previous row, on SIFT1M with fixed parameters.
+Every optimization was measured on its own against the commit before it, on the same saved SIFT1M graph (M = 16, efConstruction = 200), at efSearch 64, where recall@10 stays at 0.9636 throughout.
 
-| Change | QPS | Speedup vs previous | Commit |
+**Python runner, one commit per row.** Each commit was built in its own worktree; the median of 5 single-thread passes over 10,000 queries, all measured in one session:
+
+| Change | Commit | QPS (1 thread) | vs previous |
 |---|---|---|---|
-| Scalar baseline | | 1.00x | |
-| AVX2/FMA kernels | | | |
-| Aligned level-0 layout | | | |
-| Software prefetch | | | |
+| Scalar kernels (Phase 2 core) | `d3cce9f` | 1,833 | |
+| AVX2/FMA kernels, runtime dispatch | `1680158` | 2,266 | +24% |
+| Prefetch the next neighbor's first cache line | `c0567f9` | 2,712 | +20% |
+| Lock-capable search path for parallel build | `b02565d` | 2,657 | -2% (noise) |
+
+**C++ harness, paired A/B.** `hopfilter_search_bench` runs the same queries with no Python in the loop, and the two builds alternate run by run so machine drift cancels out:
+
+| Change | Commit | QPS A -> B | vs previous | Kept |
+|---|---|---|---|---|
+| Prefetch every cache line of the next neighbor's vector | `cb6c717` | 2,727 -> 3,493 | +28% (B ahead in 3/3 rounds) | yes |
+| Prefetch visited stamps and the next candidate's neighbor list | `49c7857` | 3,188 -> 3,539 | +11% (B ahead in 5/5 rounds) | yes |
+| 16-bit visited stamps (2 MB instead of 4 MB) | none | 3,473 -> 3,507 | +1%, within noise | no, reverted |
+
+The search is bound by memory latency more than by arithmetic. AVX2 alone gave +24%. The three prefetch steps, which load what the next step will touch, gave +20%, +28% and +11%: together worth far more than the SIMD kernels. Forcing the scalar kernels on the final build tells the same story, since SIMD is then worth about 20%.
+
+**Parallel build** (SIFT1M, AVX2 kernels):
+
+| Threads | Build time | Speedup | recall@10 at efSearch 64 |
+|---|---|---|---|
+| 1 | 958 s (Phase 2 scalar: 1,309 s) | 1.0x | 0.9636 |
+| 16 | 143 s | 6.7x | 0.9634 |
+
+The parallel build gives up determinism (edges depend on thread timing) but not quality. The first parallel version left up to 32 of 4,000 nodes unreachable; [the merge fix](design.md#7-concurrency-contract) brought that to 0-1.
+
+**Profiling note.** No sampling profiler (VTune, WPA, perf) was available on this machine. Instead of profiles, each change was justified by an isolated paired measurement.
+
+### Raw ANN: comparison (Phase 3)
+
+**Setup:** SIFT1M, M = 16, efConstruction = 200, seed 42, the same 16 threads for every build. Each library runs in its own process. QPS is the median of 3 passes over 10,000 queries, interpolated (log-linear) to matched recall. AMD Ryzen (Family 25 Model 68), 16 logical CPUs, 15.8 GiB, Windows 11, commit `49c7857`.
+
+| Library | Build | Memory growth | QPS @0.95, 1 thread | QPS @0.95, 16 threads | QPS @0.99, 1 thread | QPS @0.99, 16 threads |
+|---|---|---|---|---|---|---|
+| hopfilter (AVX2) | **107 s** | 710 MiB | 5,654 | **27,137** | 2,611 | **12,183** |
+| hnswlib 0.8.0 (AVX2) | 113 s | 814 MiB | **5,991** | 23,338 | **2,798** | 10,823 |
+| FAISS 1.15.1 `IndexHNSWFlat` | 128 s | **629 MiB** | 5,919 | 25,332 | 2,641 | 11,584 |
+| hopfilter (scalar kernels) | 98 s | 710 MiB | 4,695 | 29,474 | 2,221 | 12,941 |
+
+![Recall vs QPS on SIFT1M for hopfilter, hnswlib and FAISS](https://raw.githubusercontent.com/imDharaneesh/hopfilter-ann/master/benchmarks/plots/compare_sift1m.png)
+
+**Where hopfilter wins.** It has the fastest build, and it leads all three libraries once all 16 threads search: +16% over hnswlib and +7% over FAISS at recall 0.95, and +13% / +5% at 0.99.
+
+**Where it loses.** Single-threaded, it trails hnswlib by 6% at recall 0.95 and 7% at 0.99, and FAISS by 5% and 1%. The remaining gap is most likely layout: hopfilter keeps vectors and level-0 links in separate arrays, so expanding a node touches two memory regions where an interleaved layout would touch one. It also pays two indirect calls per distance (the metric strategy, then the kernel dispatch). Both are deliberate design choices for clarity and extensibility, and this gap is their measured cost.
+
+**Caveats, stated plainly:**
+
+- The FAISS wheel on PyPI for Windows runs without SIMD (`faiss.SIMDConfig.get_level_name()` returns `NONE`); on Linux the same package loads an AVX2 build. FAISS without SIMD still matches hopfilter with AVX2 single-threaded, so FAISS's search loop is the most efficient of the three. hopfilter with scalar kernels is included as a like-for-like row against it.
+- hnswlib 0.8.0 ships only as source and was compiled with `CL=/arch:AVX2`. Without it, MSVC builds hnswlib with SSE only.
+- At 16 threads the scalar build is slightly faster than the AVX2 build. With 16 threads the search appears to be memory-bandwidth bound, so the arithmetic saved by AVX2 no longer matters; the difference is within the run-to-run spread.
+- Memory growth is the process RSS increase during the build, which includes allocator slack; the saved hopfilter index is 577 MiB.
+- An earlier comparison ran all libraries in one process and was discarded: memory carried over between libraries, and thermal state made later runs slower.
+
+**Reproduce**
+
+```bash
+uv sync --group compare
+uv run python benchmarks/runners/ann_compare.py --config benchmarks/configs/compare_sift1m.yaml
+uv run python benchmarks/plots/plot_ann_compare.py --results benchmarks/results/compare_sift1m.json --output benchmarks/plots/compare_sift1m.png
+```
+
+On Windows, set `CL=/arch:AVX2` before `uv sync` so hnswlib is compiled with AVX2. The optimization-log configs are `benchmarks/configs/sift1m_optlog*.yaml` and `sift1m_build_*.yaml`. The C++ harness is built with `-DHOPFILTER_BUILD_BENCHMARKS=ON` and fed by `benchmarks/runners/export_ann_queries.py`.
 
 ### Filtered search (Phase 4)
 
