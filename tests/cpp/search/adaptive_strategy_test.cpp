@@ -36,8 +36,10 @@ TEST(AdaptiveStrategyTest, PlansBySelectivity) {
 
     EXPECT_EQ(strategy->plan(SearchRequest{}, kUniverse), FilterPlan::Unfiltered);
     EXPECT_EQ(plan(1.0), FilterPlan::PostFilter);
-    EXPECT_EQ(plan(0.6), FilterPlan::PostFilter);
+    EXPECT_EQ(plan(0.95), FilterPlan::PostFilter);
+    EXPECT_EQ(plan(0.6), FilterPlan::InGraph);
     EXPECT_EQ(plan(0.1), FilterPlan::InGraph);
+    EXPECT_EQ(plan(0.01), FilterPlan::Exact);
     EXPECT_EQ(plan(0.001), FilterPlan::Exact);
 }
 

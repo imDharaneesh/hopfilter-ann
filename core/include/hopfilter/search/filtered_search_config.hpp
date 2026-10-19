@@ -8,8 +8,8 @@
 namespace hopfilter {
 
 struct AdaptiveThresholds {
-    double postFilterAbove = 0.5;
-    double exactBelow = 0.01;
+    double postFilterAbove = 0.9;
+    double exactBelow = 0.015;
 };
 
 struct FilteredSearchConfig {
