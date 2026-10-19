@@ -93,7 +93,7 @@ TEST(MetricRegistryTest, UnknownNameListsKnownMetrics) {
     const auto registry = MetricRegistry::withBuiltins();
 
     EXPECT_EQ(invalidArgumentMessage([&] { static_cast<void>(registry.create("manhattan")); }),
-              "unknown metric 'manhattan'; known metrics: cosine, ip, l2");
+              "unknown metric 'manhattan'; known: cosine, ip, l2");
 }
 
 TEST(MetricRegistryTest, CustomMetricCanBeRegistered) {

@@ -1,19 +1,18 @@
 #pragma once
 
-#include <functional>
 #include <memory>
 #include <string>
 #include <string_view>
-#include <utility>
 #include <vector>
 
+#include <hopfilter/common/named_factories.hpp>
 #include <hopfilter/distance/distance_metric.hpp>
 
 namespace hopfilter {
 
 class MetricRegistry {
 public:
-    using Factory = std::function<std::unique_ptr<DistanceMetric>()>;
+    using Factory = NamedFactories<DistanceMetric>::Factory;
 
     [[nodiscard]] static MetricRegistry withBuiltins();
 
@@ -24,9 +23,7 @@ public:
     [[nodiscard]] std::vector<std::string> names() const;
 
 private:
-    using Entry = std::pair<std::string, Factory>;
-
-    std::vector<Entry> factories_;
+    NamedFactories<DistanceMetric> factories_{"metric"};
 };
 
 }
