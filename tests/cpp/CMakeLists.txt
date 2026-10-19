@@ -19,6 +19,11 @@ add_executable(hopfilter_core_tests
     common/visited_set_test.cpp
     distance/kernels_test.cpp
     distance/metrics_test.cpp
+    filter/attribute_store_test.cpp
+    filter/dynamic_bitset_test.cpp
+    filter/filter_expression_test.cpp
+    filter/filter_predicate_test.cpp
+    filter/selectivity_test.cpp
     graph/hnsw_graph_test.cpp
     graph/layer_assigner_test.cpp
     graph/neighbor_selector_test.cpp

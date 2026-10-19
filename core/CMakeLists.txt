@@ -42,6 +42,17 @@ hopfilter_add_module(storage
         hopfilter::common
 )
 
+hopfilter_add_module(filter
+    SOURCES
+        src/filter/attribute_store.cpp
+        src/filter/dynamic_bitset.cpp
+        src/filter/filter_expression.cpp
+        src/filter/filter_predicate.cpp
+        src/filter/selectivity.cpp
+    DEPENDS
+        hopfilter::common
+)
+
 hopfilter_add_module(graph
     SOURCES
         src/graph/hnsw_graph.cpp
