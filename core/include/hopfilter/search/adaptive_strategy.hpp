@@ -25,6 +25,7 @@ struct AdaptiveParts {
     std::unique_ptr<SearchStrategy> inGraph;
     std::unique_ptr<SearchStrategy> exact;
     AdaptiveThresholds thresholds;
+    std::size_t localProbe = kDefaultLocalProbe;
 };
 
 class AdaptiveStrategy final : public SearchStrategy {
@@ -41,7 +42,18 @@ public:
 
     [[nodiscard]] FilterPlan plan(const SearchRequest& request, std::size_t universeSize) const;
 
+    [[nodiscard]] FilterPlan planFor(const SearchContext& context,
+                                     std::span<const float> query,
+                                     const SearchRequest& request) const;
+
 private:
+    [[nodiscard]] FilterPlan planForSelectivity(const SearchRequest& request,
+                                                std::size_t universeSize,
+                                                double selectivity) const noexcept;
+    [[nodiscard]] bool matchesLookDistant(const SearchContext& context,
+                                          std::span<const float> query,
+                                          const FilterPredicate& filter,
+                                          double selectivity) const;
     [[nodiscard]] const SearchStrategy& delegateFor(FilterPlan plan) const noexcept;
 
     std::unique_ptr<SelectivityEstimator> estimator_;
@@ -50,6 +62,7 @@ private:
     std::unique_ptr<SearchStrategy> inGraph_;
     std::unique_ptr<SearchStrategy> exact_;
     AdaptiveThresholds thresholds_;
+    std::size_t localProbe_;
 };
 
 }

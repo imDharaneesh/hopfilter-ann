@@ -25,6 +25,11 @@ void validate(const FilteredSearchConfig& config) {
                 config.thresholds.exactBelow <= config.thresholds.postFilterAbove,
             "thresholds need 0 <= exactBelow <= postFilterAbove");
     require(config.selectivitySample > 0, "selectivitySample must be positive");
+    require(config.thresholds.distantShare >= 0.0, "distantShare must not be negative");
+    require(
+        config.thresholds.distantExactBelow >= 0.0 && config.thresholds.distantExactBelow <= 1.0,
+        "distantExactBelow must be in [0, 1]");
+    require(config.localProbe > 0, "localProbe must be positive");
 }
 
 }

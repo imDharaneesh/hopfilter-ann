@@ -7,9 +7,13 @@
 
 namespace hopfilter {
 
+inline constexpr std::size_t kDefaultLocalProbe = 1024;
+
 struct AdaptiveThresholds {
     double postFilterAbove = 0.9;
     double exactBelow = 0.015;
+    double distantShare = 0.25;
+    double distantExactBelow = 0.25;
 };
 
 struct FilteredSearchConfig {
@@ -21,6 +25,7 @@ struct FilteredSearchConfig {
     AdaptiveThresholds thresholds;
     std::size_t selectivitySample = kDefaultSelectivitySample;
     std::uint64_t selectivitySeed = kDefaultSelectivitySeed;
+    std::size_t localProbe = kDefaultLocalProbe;
 };
 
 void validate(const FilteredSearchConfig& config);

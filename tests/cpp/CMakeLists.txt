@@ -36,6 +36,7 @@ add_executable(hopfilter_core_tests
     io/index_serializer_test.cpp
     search/adaptive_strategy_test.cpp
     search/filtered_strategies_test.cpp
+    search/neighbourhood_probe_test.cpp
     search/search_test.cpp
     search/strategy_registry_test.cpp
     storage/vector_store_test.cpp

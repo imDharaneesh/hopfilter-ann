@@ -70,6 +70,7 @@ hopfilter_add_module(search
         src/search/filtered_search_config.cpp
         src/search/filtered_search_layer.cpp
         src/search/filtered_strategies.cpp
+        src/search/neighbourhood_probe.cpp
         src/search/search_layer.cpp
         src/search/search_strategy.cpp
         src/search/strategy_registry.cpp
