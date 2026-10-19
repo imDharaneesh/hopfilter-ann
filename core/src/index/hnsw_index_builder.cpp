@@ -10,6 +10,7 @@
 #include <hopfilter/index/hnsw_index.hpp>
 #include <hopfilter/index/hnsw_index_builder.hpp>
 #include <hopfilter/index/index_config.hpp>
+#include <hopfilter/search/adaptive_strategy.hpp>
 #include <hopfilter/search/search_strategy.hpp>
 #include <hopfilter/storage/vector_store.hpp>
 
@@ -110,7 +111,7 @@ void HnswIndexBuilder::fillDefaults(const IndexConfig& config) {
         neighborSelector_ = std::make_unique<HeuristicNeighborSelector>();
     }
     if (!searchStrategy_) {
-        searchStrategy_ = std::make_unique<UnfilteredStrategy>();
+        searchStrategy_ = AdaptiveStrategy::withDefaults();
     }
 }
 

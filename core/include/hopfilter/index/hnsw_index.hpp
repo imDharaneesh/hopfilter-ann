@@ -6,11 +6,13 @@
 #include <optional>
 #include <shared_mutex>
 #include <span>
+#include <string>
 #include <vector>
 
 #include <hopfilter/common/types.hpp>
 #include <hopfilter/common/visited_set.hpp>
 #include <hopfilter/distance/distance_metric.hpp>
+#include <hopfilter/filter/attribute_store.hpp>
 #include <hopfilter/graph/hnsw_graph.hpp>
 #include <hopfilter/graph/layer_assigner.hpp>
 #include <hopfilter/graph/neighbor_selector.hpp>
@@ -46,6 +48,15 @@ public:
                                        std::size_t k,
                                        const SearchRequest& request) const override;
 
+    [[nodiscard]] SearchResults search(std::span<const float> query,
+                                       std::size_t k,
+                                       const SearchRequest& request,
+                                       const SearchStrategy& strategy) const;
+
+    void setCategoricalAttribute(std::string name, CategoricalColumn codes);
+    void setNumericAttribute(std::string name, NumericColumn values);
+    [[nodiscard]] const AttributeStore& attributes() const noexcept { return attributes_; }
+
     [[nodiscard]] std::size_t size() const noexcept override { return vectors_->size(); }
     [[nodiscard]] Dimension dimension() const noexcept override { return config_.dimension; }
     [[nodiscard]] std::size_t capacity() const noexcept { return config_.capacity; }
@@ -62,6 +73,7 @@ private:
     };
 
     void validateDimension(std::span<const float> vector) const;
+    void validateColumnLength(const std::string& name, std::size_t length) const;
     [[nodiscard]] std::vector<float> prepared(std::span<const float> vector) const;
     [[nodiscard]] NodeId allocate(std::span<const float> rows);
     [[nodiscard]] EntrySnapshot readEntry() const;
@@ -85,6 +97,7 @@ private:
     std::mutex allocationMutex_;
     mutable std::shared_mutex entryMutex_;
     NodeLocks nodeLocks_;
+    AttributeStore attributes_;
 };
 
 }

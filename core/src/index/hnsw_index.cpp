@@ -45,6 +45,13 @@ NodeId HnswIndex::insertBatch(std::span<const float> rows, std::size_t threads) 
 SearchResults HnswIndex::search(std::span<const float> query,
                                 std::size_t k,
                                 const SearchRequest& request) const {
+    return search(query, k, request, *searchStrategy_);
+}
+
+SearchResults HnswIndex::search(std::span<const float> query,
+                                std::size_t k,
+                                const SearchRequest& request,
+                                const SearchStrategy& strategy) const {
     validateDimension(query);
     if (k == 0) {
         throw InvalidArgumentError("k must be positive");
@@ -52,7 +59,25 @@ SearchResults HnswIndex::search(std::span<const float> query,
     const auto preparedQuery = prepared(query);
     const auto lease = visitedPool_.acquire();
     const SearchContext context{*graph_, distances_, lease.get()};
-    return searchStrategy_->search(context, preparedQuery, k, request);
+    return strategy.search(context, preparedQuery, k, request);
+}
+
+void HnswIndex::setCategoricalAttribute(std::string name, CategoricalColumn codes) {
+    validateColumnLength(name, codes.size());
+    attributes_.setCategorical(std::move(name), std::move(codes));
+}
+
+void HnswIndex::setNumericAttribute(std::string name, NumericColumn values) {
+    validateColumnLength(name, values.size());
+    attributes_.setNumeric(std::move(name), std::move(values));
+}
+
+void HnswIndex::validateColumnLength(const std::string& name, std::size_t length) const {
+    if (length > config_.capacity) {
+        throw InvalidArgumentError("attribute '" + name + "' has " + std::to_string(length) +
+                                   " rows but the index capacity is " +
+                                   std::to_string(config_.capacity));
+    }
 }
 
 void HnswIndex::validateDimension(std::span<const float> vector) const {

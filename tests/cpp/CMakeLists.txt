@@ -28,12 +28,16 @@ add_executable(hopfilter_core_tests
     graph/layer_assigner_test.cpp
     graph/neighbor_selector_test.cpp
     graph/node_locks_test.cpp
+    index/hnsw_filtered_search_test.cpp
     index/hnsw_index_builder_test.cpp
     index/hnsw_index_test.cpp
     index/hnsw_parallel_build_test.cpp
     index/hnsw_recall_test.cpp
     io/index_serializer_test.cpp
+    search/adaptive_strategy_test.cpp
+    search/filtered_strategies_test.cpp
     search/search_test.cpp
+    search/strategy_registry_test.cpp
     storage/vector_store_test.cpp
 )
 target_include_directories(hopfilter_core_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

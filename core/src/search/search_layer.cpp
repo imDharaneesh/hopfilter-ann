@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cstddef>
+#include <optional>
 #include <span>
 #include <utility>
 #include <vector>
@@ -10,12 +11,6 @@
 
 namespace hopfilter {
 namespace {
-
-struct FartherFirst {
-    [[nodiscard]] bool operator()(const Neighbor& first, const Neighbor& second) const noexcept {
-        return CloserFirst{}(second, first);
-    }
-};
 
 class LayerSearch {
 public:
@@ -135,6 +130,16 @@ Neighbor greedyDescend(const SearchContext& context,
         closest = searchLayer(context, query, {&closest, 1}, 1, level).front();
     }
     return closest;
+}
+
+std::optional<Neighbor> descendToLevelZero(const SearchContext& context,
+                                           std::span<const float> query) {
+    const auto entryPoint = context.graph().entryPoint();
+    if (!entryPoint) {
+        return std::nullopt;
+    }
+    const Neighbor entry{*entryPoint, context.distances().toQuery(query, *entryPoint)};
+    return greedyDescend(context, query, entry, context.graph().maxLevel(), 0);
 }
 
 }

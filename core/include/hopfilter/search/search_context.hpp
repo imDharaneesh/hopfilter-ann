@@ -3,6 +3,7 @@
 #include <cstddef>
 
 #include <hopfilter/common/visited_set.hpp>
+#include <hopfilter/filter/filter_predicate.hpp>
 #include <hopfilter/graph/hnsw_graph.hpp>
 #include <hopfilter/graph/node_distances.hpp>
 #include <hopfilter/graph/node_locks.hpp>
@@ -13,6 +14,7 @@ inline constexpr std::size_t kDefaultEfSearch = 64;
 
 struct SearchRequest {
     std::size_t efSearch = kDefaultEfSearch;
+    const FilterPredicate* filter = nullptr;
 };
 
 class SearchContext {

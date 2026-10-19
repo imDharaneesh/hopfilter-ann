@@ -29,6 +29,12 @@ struct CloserFirst {
     }
 };
 
+struct FartherFirst {
+    [[nodiscard]] bool operator()(const Neighbor& first, const Neighbor& second) const noexcept {
+        return CloserFirst{}(second, first);
+    }
+};
+
 using SearchResults = std::vector<Neighbor>;
 
 }

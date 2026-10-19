@@ -66,10 +66,16 @@ hopfilter_add_module(graph
 
 hopfilter_add_module(search
     SOURCES
+        src/search/adaptive_strategy.cpp
+        src/search/filtered_search_config.cpp
+        src/search/filtered_search_layer.cpp
+        src/search/filtered_strategies.cpp
         src/search/search_layer.cpp
         src/search/search_strategy.cpp
+        src/search/strategy_registry.cpp
     DEPENDS
         hopfilter::common
+        hopfilter::filter
         hopfilter::graph
 )
 
@@ -80,6 +86,7 @@ hopfilter_add_module(index
     DEPENDS
         hopfilter::common
         hopfilter::distance
+        hopfilter::filter
         hopfilter::storage
         hopfilter::graph
         hopfilter::search
