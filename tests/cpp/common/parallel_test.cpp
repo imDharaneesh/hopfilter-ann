@@ -1,4 +1,5 @@
 #include <atomic>
+#include <chrono>
 #include <cstddef>
 #include <stdexcept>
 #include <string>
@@ -52,6 +53,7 @@ TEST(ParallelForTest, RethrowsTheFirstExceptionAfterAllThreadsStop) {
         if (index == 7) {
             throw std::runtime_error("index 7 failed");
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds{1});
     };
 
     try {
