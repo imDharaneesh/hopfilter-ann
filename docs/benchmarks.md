@@ -163,11 +163,13 @@ An earlier run at the same commit was discarded. It overlapped with compiler and
 uv run python benchmarks/runners/ann_recall.py --config benchmarks/configs/sift1m.yaml
 ``
 
-**GloVe-100 (angular), recall only.** 1,183,514 x 100 vectors, cosine metric, M = 24, efConstruction = 300, same machine and commit series. Recall depends only on the graph, so it is reported. This run's QPS and build time are **not**: compiler jobs ran on the same CPU for its whole duration. They are re-measured in Phase 3.
+**GloVe-100 (angular).** 1,183,514 x 100 vectors, cosine metric, M = 24, efConstruction = 300. Measured with the Phase 3 code (AVX2, prefetch) on an idle machine: built in 345 s on 16 threads; QPS is the median of 3 runs. The Phase 2 run produced the same recall, but its timings were taken while compiler jobs shared the CPU and are not used.
 
 | efSearch | 10 | 32 | 64 | 128 | 256 | 512 | 768 | 1024 |
 |---|---|---|---|---|---|---|---|---|
-| recall@10 | 0.547 | 0.733 | 0.814 | 0.875 | 0.923 | 0.957 | 0.972 | 0.980 |
+| recall@10 | 0.547 | 0.733 | 0.814 | 0.875 | 0.923 | 0.958 | 0.972 | 0.980 |
+| QPS, 1 thread | 7,679 | 4,144 | 2,426 | 1,381 | 735 | 390 | 268 | 203 |
+| QPS, 16 threads | 48,009 | 24,479 | 14,273 | 7,785 | 3,941 | 2,062 | 1,373 | 989 |
 
 GloVe is far harder than SIFT for graph indexes, because its angular neighborhoods are less well separated. Reaching 0.95 takes an efSearch of about 500 rather than 50.
 
