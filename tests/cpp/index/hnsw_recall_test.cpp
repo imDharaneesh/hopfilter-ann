@@ -98,8 +98,11 @@ TEST_F(GraphInvariantsTest, NeighborListsRespectDegreeAndLevelBounds) {
 }
 
 TEST_F(GraphInvariantsTest, EntryPointIsOnTheTopLevel) {
-    ASSERT_TRUE(graph().entryPoint().has_value());
-    EXPECT_EQ(graph().levelOf(*graph().entryPoint()), graph().maxLevel());
+    const auto entryPoint = graph().entryPoint();
+    if (!entryPoint) {
+        FAIL() << "the graph has no entry point";
+    }
+    EXPECT_EQ(graph().levelOf(*entryPoint), graph().maxLevel());
     for (NodeId id = 0; id < graph().size(); ++id) {
         EXPECT_LE(graph().levelOf(id), graph().maxLevel());
     }
