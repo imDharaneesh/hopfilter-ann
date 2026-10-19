@@ -16,7 +16,7 @@ struct FilteredSearchConfig {
     double overFetchFactor = 4.0;
     std::size_t rejectionWindow = 64;
     double rejectionThreshold = 0.9;
-    double efGrowthFactor = 1.5;
+    double efGrowthFactor = 1.0;
     std::size_t maxEf = 1024;
     AdaptiveThresholds thresholds;
     std::size_t selectivitySample = kDefaultSelectivitySample;

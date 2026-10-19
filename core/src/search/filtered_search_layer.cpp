@@ -94,6 +94,9 @@ private:
     }
 
     void recordVisit(bool matches) noexcept {
+        if (schedule_.growthFactor <= 1.0) {
+            return;
+        }
         ++windowVisits_;
         windowRejections_ += matches ? 0 : 1;
         if (windowVisits_ < schedule_.rejectionWindow) {

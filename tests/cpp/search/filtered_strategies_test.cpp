@@ -147,10 +147,12 @@ TEST_F(FilteredStrategiesTest, RejectionWidensTheResultSet) {
 
     const EfSchedule fixed{8, 16, 0.5, 2.0, 8};
     const EfSchedule widening{8, 16, 0.5, 2.0, 128};
+    const EfSchedule disabled{8, 16, 0.5, 1.0, 128};
     const auto narrow = filteredSearchLayer(context, query, {&*start, 1}, *filter, fixed);
     const auto wide = filteredSearchLayer(context, query, {&*start, 1}, *filter, widening);
 
     EXPECT_EQ(narrow.size(), 8U);
+    EXPECT_EQ(filteredSearchLayer(context, query, {&*start, 1}, *filter, disabled).size(), 8U);
     EXPECT_GT(wide.size(), narrow.size());
     EXPECT_TRUE(testing::isWellFormed(wide, *filter));
 }
