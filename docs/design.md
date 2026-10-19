@@ -419,6 +419,7 @@ classDiagram
         +maxEf: size_t
         +thresholds: AdaptiveThresholds
         +selectivitySample: size_t
+        +localProbe: size_t
     }
     class UnfilteredStrategy
     class PostFilterStrategy {
@@ -436,6 +437,7 @@ classDiagram
         -exact_: unique_ptr~SearchStrategy~
         -thresholds_: AdaptiveThresholds
         +plan(request, universeSize) FilterPlan
+        +planFor(context, query, request) FilterPlan
     }
     class SearchStrategyRegistry {
         +withBuiltins(FilteredSearchConfig)$ SearchStrategyRegistry
@@ -462,7 +464,9 @@ classDiagram
 | `adaptive` | `AdaptiveStrategy` | Samples selectivity, then delegates | Picks the cheapest correct option | Estimation cost per query; thresholds need tuning |
 
 - `HnswIndex` uses `adaptive` unless the builder injects another strategy. A request without a filter goes straight to the unfiltered path, so unfiltered searches pay nothing for filter support.
-- `AdaptiveStrategy::plan` returns the `FilterPlan` it would use (`Unfiltered`, `PostFilter`, `InGraph` or `Exact`). The rule: selectivity at or above `postFilterAbove` uses the post-filter, below `exactBelow` uses exact search, and anything in between uses in-graph search. Both thresholds live in `FilteredSearchConfig`; the defaults (`postFilterAbove = 0.9`, `exactBelow = 0.015`) come from the Phase 4 sweep. Selectivity alone cannot see whether matching items cluster away from the query, which is where adaptive search still loses (see [benchmarks](benchmarks.md#filtered-search-phase-4)).
+- `AdaptiveStrategy::plan` returns the `FilterPlan` it would use from global selectivity alone (`Unfiltered`, `PostFilter`, `InGraph` or `Exact`). The rule: selectivity at or above `postFilterAbove` uses the post-filter, below `exactBelow` uses exact search, and anything in between uses in-graph search. The defaults (`postFilterAbove = 0.9`, `exactBelow = 0.015`) come from the Phase 4 sweep.
+- **Query-local check.** Global selectivity cannot see whether the matching items sit near the query or in some distant region. In the second case in-graph search has to cross much of the graph before it finds `ef` matches, and exact search is cheaper. So when the global plan is `InGraph`, `planFor` also descends to level 0 and probes the query's neighbourhood: a breadth-first walk over level-0 links from the descent's end point, checking the filter on up to `localProbe` nodes (1,024 by default) with no distance computations. If the matching share there is below `distantShare` times the global selectivity (0.25), and the global selectivity is below `distantExactBelow` (0.25), the query goes to exact search. Above that selectivity the exact scan is too expensive to win even for distant matches. `distantShare = 0` turns the check off.
+- Every threshold lives in `FilteredSearchConfig`. The probe is `neighbourhoodShare` in `search/neighbourhood_probe.hpp`; it reuses the query's leased `VisitedSet`, so it allocates nothing.
 - `HnswIndex::search` has an overload that takes a `const SearchStrategy&`, which is how the benchmarks and the Python `strategy=` argument run one index under every strategy.
 - `SearchContext` gives a strategy read-only access to the index internals plus a per-thread `VisitedSet`. Strategies therefore stay stateless, and one strategy instance serves all threads.
 
@@ -825,3 +829,4 @@ classDiagram
 | 24 | 2026-10-19 | A filter is compiled once per `search` call, not per query | Every query in a batch shares the filter, so the predicate tree is built once and read concurrently; per-query compilation would allocate inside the parallel loop |
 | 25 | 2026-10-19 | `Filter` raises on `bool()` | `a and b` on two filters would silently evaluate to `b`; raising makes the mistake loud and points to `&`, `\|` and `~` |
 | 26 | 2026-10-19 | clang-tidy `misc-no-recursion` disabled | Filter expressions are trees and are compiled and described recursively; an explicit stack would be longer and harder to read for depths that stay in single digits |
+| 27 | 2026-10-19 | A level-0 neighbourhood probe refines the in-graph decision per query | On the clustered SIFT1M attribute at 10%, adaptive search ran in-graph at 185 QPS where exact search ran at 356. Among each query's 100 true neighbours, the matching share was below a quarter of the global share for 60% of clustered queries but for under 1% of uniform ones, so the signal separates the two cases. The probe only checks the filter on graph neighbours, so it costs no distance computations |
