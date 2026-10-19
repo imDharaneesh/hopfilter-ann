@@ -24,7 +24,6 @@
 
 namespace hopfilter {
 
-/// Collaborators of an HnswIndex, assembled and validated by HnswIndexBuilder.
 struct HnswIndexParts {
     IndexConfig config;
     std::unique_ptr<DistanceMetric> metric;
@@ -35,26 +34,14 @@ struct HnswIndexParts {
     std::unique_ptr<SearchStrategy> searchStrategy;
 };
 
-/// Hierarchical Navigable Small World index (Malkov and Yashunin, 2018).
-///
-/// Orchestrates insertion and search through injected collaborators; create it with
-/// HnswIndexBuilder. Thread safety: any number of concurrent ``search`` calls are
-/// safe; ``insert`` calls are serialized internally; ``search`` concurrent with
-/// ``insert`` is not supported.
 class HnswIndex final : public Insertable, public Searchable {
 public:
     explicit HnswIndex(HnswIndexParts parts);
 
-    /// Throws InvalidArgumentError on a dimension mismatch and IndexStateError when full.
     NodeId insert(std::span<const float> vector) override;
 
-    /// Inserts row-major `rows` (a whole number of vectors) linking on `threads`
-    /// workers (0 = all cores). Row `i` gets id `first + i`; returns `first`. If the
-    /// batch does not fit, IndexStateError is thrown and nothing is inserted.
     NodeId insertBatch(std::span<const float> rows, std::size_t threads);
 
-    /// Throws InvalidArgumentError on a dimension mismatch or ``k == 0``. Returns fewer
-    /// than ``k`` neighbors only when the index holds fewer than ``k`` vectors.
     [[nodiscard]] SearchResults search(std::span<const float> query,
                                        std::size_t k,
                                        const SearchRequest& request) const override;

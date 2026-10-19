@@ -10,38 +10,20 @@
 
 namespace hopfilter {
 
-/// Layered adjacency lists of an HNSW index: structure only, no vectors or distances.
-///
-/// Level 0 holds most edges and is read on every query, so it lives in one flat,
-/// preallocated array with ``maxNeighborsLevelZero + 1`` slots per node (a count
-/// followed by ids). Upper levels hold few nodes and use one small vector per node.
-/// Node ids are dense: the n-th added node has id n. All per-node storage is allocated up
-/// front, so adding a node never moves another node's data. `addNode` calls must be
-/// serialized; reads and writes of different nodes' neighbor lists may run concurrently
-/// as long as each node is guarded, e.g. with NodeLocks.
 class HnswGraph {
 public:
-    /// Throws InvalidArgumentError if any argument is zero or ``capacity`` does not
-    /// fit in a NodeId.
     HnswGraph(std::size_t capacity,
               std::size_t maxNeighborsLevelZero,
               std::size_t maxNeighborsUpper);
 
-    /// Adds the next node with top layer ``level`` and returns its id.
-    /// Throws IndexStateError when the graph is full.
     NodeId addNode(LevelIndex level);
 
-    /// Neighbors of ``id`` on ``level``. ``level`` must not exceed ``levelOf(id)``.
     [[nodiscard]] std::span<const NodeId> neighbors(NodeId id, LevelIndex level) const noexcept;
 
-    /// Starts loading the neighbor list of ``id`` on ``level`` into cache.
     void prefetchNeighbors(NodeId id, LevelIndex level) const noexcept;
 
-    /// Replaces the neighbors of ``id`` on ``level``. Throws InvalidArgumentError if
-    /// ``level`` is above the node's top layer or there are too many neighbors.
     void setNeighbors(NodeId id, LevelIndex level, std::span<const NodeId> neighbors);
 
-    /// Makes ``id`` the search entry point; the graph's top layer becomes its level.
     void setEntryPoint(NodeId id);
 
     [[nodiscard]] std::optional<NodeId> entryPoint() const noexcept { return entryPoint_; }
@@ -52,7 +34,6 @@ public:
     }
     [[nodiscard]] std::size_t capacity() const noexcept { return capacity_; }
 
-    /// Degree bound on ``level``: ``maxNeighborsLevelZero`` on level 0, else ``maxNeighborsUpper``.
     [[nodiscard]] std::size_t maxNeighbors(LevelIndex level) const noexcept;
 
 private:

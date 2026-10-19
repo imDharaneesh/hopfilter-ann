@@ -1,4 +1,3 @@
-# build outputs
 build/
 build-*/
 out/
@@ -7,7 +6,6 @@ wheelhouse/
 _skbuild/
 *.egg-info/
 
-# python
 __pycache__/
 *.py[cod]
 .venv/
@@ -20,7 +18,6 @@ coverage.xml
 htmlcov/
 .venv
 
-# native artifacts
 *.so
 *.pyd
 *.dll
@@ -32,11 +29,9 @@ htmlcov/
 *.exp
 *.pdb
 
-# datasets and generated benchmark output
 /data/
 benchmarks/results/raw/
 
-# editors and os
 .vs/
 .vscode/
 .idea/
@@ -44,5 +39,4 @@ benchmarks/results/raw/
 .DS_Store
 Thumbs.db
 
-# docs build
 site/

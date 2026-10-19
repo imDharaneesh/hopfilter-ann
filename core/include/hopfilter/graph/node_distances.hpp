@@ -11,8 +11,6 @@
 
 namespace hopfilter {
 
-/// Read-only view that measures distances between stored nodes and to query vectors.
-/// Holds references only; the metric and store must outlive it.
 class NodeDistances {
 public:
     NodeDistances(const DistanceMetric& metric, const VectorStore& vectors) noexcept
@@ -26,7 +24,6 @@ public:
         return metric_->distance(query, vectors_->at(id));
     }
 
-    /// Starts loading every cache line of the vector of ``id`` ahead of a distance computation.
     void prefetch(NodeId id) const noexcept {
         const auto vector = vectors_->at(id);
         for (std::size_t offset = 0; offset < vector.size();
@@ -35,7 +32,6 @@ public:
         }
     }
 
-    /// Whether two stored vectors are bit-for-bit equal; stops at the first difference.
     [[nodiscard]] bool identical(NodeId lhs, NodeId rhs) const noexcept {
         return std::ranges::equal(vectors_->at(lhs), vectors_->at(rhs));
     }

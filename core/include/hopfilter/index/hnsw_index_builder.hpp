@@ -15,12 +15,6 @@
 
 namespace hopfilter {
 
-/// The only way to construct an HnswIndex: validates the configuration and fills in
-/// a default for every collaborator that was not injected.
-///
-/// Defaults: the metric named by ``config.metricName`` from the registry, an
-/// ExponentialLayerAssigner seeded with ``config.seed``, a HeuristicNeighborSelector,
-/// an UnfilteredStrategy, and empty storage sized to ``config.capacity``.
 class HnswIndexBuilder {
 public:
     HnswIndexBuilder& withConfig(IndexConfig config);
@@ -30,13 +24,9 @@ public:
     HnswIndexBuilder& withNeighborSelector(std::unique_ptr<NeighborSelector> neighborSelector);
     HnswIndexBuilder& withSearchStrategy(std::unique_ptr<SearchStrategy> searchStrategy);
 
-    /// Restores previously built storage, e.g. from IndexSerializer. Its shape must
-    /// match the configuration.
     HnswIndexBuilder& withStorage(std::unique_ptr<VectorStore> vectors,
                                   std::unique_ptr<HnswGraph> graph);
 
-    /// Throws InvalidArgumentError naming the offending field if the configuration or
-    /// injected parts are inconsistent. The builder is left empty afterwards.
     [[nodiscard]] std::unique_ptr<HnswIndex> build();
 
 private:

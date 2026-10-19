@@ -9,26 +9,15 @@
 
 namespace hopfilter {
 
-/// Fixed-capacity, contiguous storage for equally sized float vectors.
-///
-/// One allocation aligned to a cache line holds every row; each row is padded with
-/// zeros to a whole number of cache lines so SIMD kernels can use aligned loads.
-/// Capacity never grows, so spans returned by ``at`` stay valid for the store's
-/// lifetime. Reads are thread-safe; ``append`` is not and must be serialized.
 class VectorStore {
 public:
     static constexpr std::size_t kAlignmentBytes = 64;
     static constexpr std::size_t kFloatsPerAlignment = kAlignmentBytes / sizeof(float);
 
-    /// Throws InvalidArgumentError if ``dimension`` or ``capacity`` is zero, or if
-    /// ``capacity`` does not fit in a NodeId.
     VectorStore(Dimension dimension, std::size_t capacity);
 
-    /// Copies ``vector`` into the next free row and returns its id.
-    /// Throws InvalidArgumentError on a size mismatch and IndexStateError when full.
     NodeId append(std::span<const float> vector);
 
-    /// The stored vector ``id`` (without padding). ``id`` must be below ``size()``.
     [[nodiscard]] std::span<const float> at(NodeId id) const noexcept;
 
     [[nodiscard]] Dimension dimension() const noexcept { return dimension_; }

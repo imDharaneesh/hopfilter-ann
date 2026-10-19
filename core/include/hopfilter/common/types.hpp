@@ -13,7 +13,6 @@ using Dimension = std::size_t;
 
 inline constexpr NodeId kInvalidNodeId = std::numeric_limits<NodeId>::max();
 
-/// A stored node and its distance to some reference point; smaller is closer.
 struct Neighbor {
     NodeId id;
     float distance;
@@ -21,7 +20,6 @@ struct Neighbor {
     friend bool operator==(const Neighbor&, const Neighbor&) = default;
 };
 
-/// Strict weak ordering by ascending distance, ties broken by id so results are deterministic.
 struct CloserFirst {
     [[nodiscard]] bool operator()(const Neighbor& lhs, const Neighbor& rhs) const noexcept {
         if (lhs.distance != rhs.distance) {
@@ -31,7 +29,6 @@ struct CloserFirst {
     }
 };
 
-/// Neighbors sorted closest first, without duplicate ids.
 using SearchResults = std::vector<Neighbor>;
 
 }

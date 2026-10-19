@@ -10,15 +10,10 @@
 
 namespace hopfilter {
 
-/// Striped mutexes that guard per-node neighbor lists during a parallel build.
-///
-/// Node ``id`` maps to stripe ``id % stripes``; two nodes rarely share a stripe, and
-/// one mutex per node would cost tens of megabytes at a million nodes.
 class NodeLocks {
 public:
     static constexpr std::size_t kDefaultStripes = std::size_t{1} << 16U;
 
-    /// Throws InvalidArgumentError if ``stripes`` is zero.
     explicit NodeLocks(std::size_t stripes = kDefaultStripes)
         : mutexes_(stripes > 0 ? stripes : throw InvalidArgumentError("stripes must be positive")) {
     }

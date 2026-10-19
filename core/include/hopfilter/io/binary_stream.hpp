@@ -16,7 +16,6 @@ namespace hopfilter {
 static_assert(std::endian::native == std::endian::little,
               "hopfilter serialization currently supports little-endian hosts only");
 
-/// Writes trivially copyable values to a stream while accumulating a CRC-32.
 class BinaryWriter {
 public:
     explicit BinaryWriter(std::ostream& sink) noexcept : sink_(&sink) {}
@@ -33,7 +32,6 @@ public:
         writeBytes(std::as_bytes(values));
     }
 
-    /// Length-prefixed (uint32) string.
     void writeString(const std::string& text);
 
     [[nodiscard]] std::uint32_t checksum() const noexcept { return crc_.value(); }
@@ -45,8 +43,6 @@ private:
     Crc32 crc_;
 };
 
-/// Reads values written by BinaryWriter and verifies the running CRC-32.
-/// Every read throws SerializationError if the stream ends early.
 class BinaryReader {
 public:
     explicit BinaryReader(std::istream& source) noexcept : source_(&source) {}
@@ -65,10 +61,8 @@ public:
         readBytes(std::as_writable_bytes(values));
     }
 
-    /// Reads a length-prefixed string; throws SerializationError if longer than ``maxLength``.
     [[nodiscard]] std::string readString(std::size_t maxLength);
 
-    /// Reads the trailing checksum and throws SerializationError if it does not match.
     void verifyChecksum();
 
 private:

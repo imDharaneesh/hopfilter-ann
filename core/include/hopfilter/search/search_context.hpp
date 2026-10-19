@@ -11,17 +11,10 @@ namespace hopfilter {
 
 inline constexpr std::size_t kDefaultEfSearch = 64;
 
-/// Per-query search parameters.
 struct SearchRequest {
-    /// Size of the dynamic candidate list on level 0; larger trades speed for recall.
     std::size_t efSearch = kDefaultEfSearch;
 };
 
-/// Everything one traversal needs: index state plus a VisitedSet owned by this
-/// traversal alone. When ``locks`` is given, every neighbor list is copied under its
-/// node's lock, which makes the traversal safe while other threads insert; without
-/// locks the traversal reads the graph directly. Holds references only; all referents
-/// must outlive it.
 class SearchContext {
 public:
     SearchContext(const HnswGraph& graph,
