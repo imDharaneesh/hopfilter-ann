@@ -14,6 +14,7 @@
 
 #include <hopfilter/common/errors.hpp>
 #include <hopfilter/common/types.hpp>
+#include <hopfilter/filter/attribute_store.hpp>
 #include <hopfilter/graph/hnsw_graph.hpp>
 #include <hopfilter/graph/layer_assigner.hpp>
 #include <hopfilter/index/hnsw_index.hpp>
@@ -28,6 +29,9 @@ namespace {
 
 constexpr std::array<char, 4> kMagic{'H', 'O', 'P', 'F'};
 constexpr std::size_t kMaxMetricNameLength = 64;
+constexpr std::size_t kMaxAttributeNameLength = 256;
+constexpr std::uint32_t kMaxAttributeColumns = 1024;
+constexpr std::uint32_t kFirstVersionWithAttributes = 2;
 
 void require(bool condition, const std::string& message) {
     if (!condition) {
@@ -56,16 +60,33 @@ void writeGraph(BinaryWriter& writer, const HnswGraph& graph) {
     }
 }
 
-void readHeader(BinaryReader& reader) {
+template <typename Column>
+void writeColumns(BinaryWriter& writer, const AttributeStore::Columns<Column>& columns) {
+    writer.write(static_cast<std::uint32_t>(columns.size()));
+    for (const auto& [name, column] : columns) {
+        writer.writeString(name);
+        writer.write(static_cast<std::uint64_t>(column.size()));
+        writer.writeAll(std::span<const typename Column::value_type>{column});
+    }
+}
+
+void writeAttributes(BinaryWriter& writer, const AttributeStore& attributes) {
+    writeColumns(writer, attributes.categoricalColumns());
+    writeColumns(writer, attributes.numericColumns());
+}
+
+std::uint32_t readHeader(BinaryReader& reader) {
     std::array<char, kMagic.size()> magic{};
     reader.readAll(std::span<char>{magic});
     if (magic != kMagic) {
         throw SerializationError("not a hopfilter index (bad magic bytes)");
     }
     const auto version = reader.read<std::uint32_t>();
-    if (version != IndexSerializer::kFormatVersion) {
+    if (version < IndexSerializer::kOldestReadableVersion ||
+        version > IndexSerializer::kFormatVersion) {
         throw SerializationError("unsupported index format version " + std::to_string(version));
     }
+    return version;
 }
 
 IndexConfig readConfig(BinaryReader& reader) {
@@ -129,18 +150,58 @@ std::unique_ptr<HnswGraph> readGraph(BinaryReader& reader,
     return graph;
 }
 
+template <typename Column, typename Assign>
+void readColumns(BinaryReader& reader, std::size_t capacity, const Assign& assign) {
+    const auto count = reader.read<std::uint32_t>();
+    require(count <= kMaxAttributeColumns, "too many attribute columns");
+    for (std::uint32_t column = 0; column < count; ++column) {
+        std::string name = reader.readString(kMaxAttributeNameLength);
+        const auto rows = reader.read<std::uint64_t>();
+        require(!name.empty() && rows <= capacity, "attribute column out of range");
+        Column values(rows);
+        reader.readAll(std::span<typename Column::value_type>{values});
+        assign(std::move(name), std::move(values));
+    }
+}
+
+void readAttributes(BinaryReader& reader, const IndexConfig& config, AttributeStore& attributes) {
+    readColumns<CategoricalColumn>(
+        reader, config.capacity, [&attributes](std::string name, CategoricalColumn codes) {
+            attributes.setCategorical(std::move(name), std::move(codes));
+        });
+    readColumns<NumericColumn>(
+        reader, config.capacity, [&attributes](std::string name, NumericColumn values) {
+            attributes.setNumeric(std::move(name), std::move(values));
+        });
+}
+
+void restoreAttributes(HnswIndex& index, const AttributeStore& attributes) {
+    for (const auto& [name, codes] : attributes.categoricalColumns()) {
+        index.setCategoricalAttribute(name, codes);
+    }
+    for (const auto& [name, values] : attributes.numericColumns()) {
+        index.setNumericAttribute(name, values);
+    }
+}
+
 std::unique_ptr<HnswIndex> parse(std::istream& source, const MetricRegistry& registry) {
     BinaryReader reader{source};
-    readHeader(reader);
+    const std::uint32_t version = readHeader(reader);
     IndexConfig config = readConfig(reader);
     auto vectors = readVectors(reader, config);
     auto graph = readGraph(reader, config, vectors->size());
+    AttributeStore attributes;
+    if (version >= kFirstVersionWithAttributes) {
+        readAttributes(reader, config, attributes);
+    }
     reader.verifyChecksum();
-    return HnswIndexBuilder{}
-        .withConfig(std::move(config))
-        .withMetricRegistry(registry)
-        .withStorage(std::move(vectors), std::move(graph))
-        .build();
+    auto index = HnswIndexBuilder{}
+                     .withConfig(std::move(config))
+                     .withMetricRegistry(registry)
+                     .withStorage(std::move(vectors), std::move(graph))
+                     .build();
+    restoreAttributes(*index, attributes);
+    return index;
 }
 
 }
@@ -155,6 +216,7 @@ void IndexSerializer::save(const HnswIndex& index, std::ostream& sink) {
         writer.writeAll(index.vectors().at(id));
     }
     writeGraph(writer, index.graph());
+    writeAttributes(writer, index.attributes());
     const std::uint32_t checksum = writer.checksum();
     writer.write(checksum);
 }

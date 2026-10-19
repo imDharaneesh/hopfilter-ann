@@ -5,11 +5,13 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include <gtest/gtest.h>
 
 #include <hopfilter/common/errors.hpp>
+#include <hopfilter/filter/attribute_store.hpp>
 #include <hopfilter/index/hnsw_index_builder.hpp>
 #include <hopfilter/index/index_config.hpp>
 #include <hopfilter/io/crc32.hpp>
@@ -155,11 +157,11 @@ TEST(IndexSerializerTest, RejectsForeignDataAndUnknownVersions) {
     testing::RandomVectors random{11};
     auto bytes = serialized(*testing::buildIndex(random.vectors(10, 4), configFor("l2")));
     auto futureVersion = bytes;
-    futureVersion[4] = 2;
+    futureVersion[4] = 3;
 
     EXPECT_EQ(serializationErrorOf("PNG\x89 not an index"),
               "not a hopfilter index (bad magic bytes)");
-    EXPECT_EQ(serializationErrorOf(futureVersion), "unsupported index format version 2");
+    EXPECT_EQ(serializationErrorOf(futureVersion), "unsupported index format version 3");
 }
 
 TEST(IndexSerializerTest, FileHelpersRoundTripAndReportMissingFiles) {
@@ -181,21 +183,57 @@ std::unique_ptr<HnswIndex> fixtureIndex() {
     return testing::buildIndex(random.vectors(kFixturePoints, kDimension), configFor("l2"));
 }
 
-std::filesystem::path fixturePath() {
-    return std::filesystem::path{HOPFILTER_FIXTURE_DIR} / "index_format_v1.hopf";
+std::unique_ptr<HnswIndex> fixtureIndexWithAttributes() {
+    auto index = fixtureIndex();
+    CategoricalColumn buckets(kFixturePoints);
+    NumericColumn scores(kFixturePoints);
+    for (std::size_t id = 0; id < kFixturePoints; ++id) {
+        buckets[id] = static_cast<CategoryCode>(id % 4);
+        scores[id] = static_cast<double>(id) * 0.5;
+    }
+    index->setCategoricalAttribute("bucket", std::move(buckets));
+    index->setNumericAttribute("score", std::move(scores));
+    return index;
 }
 
-TEST(IndexFormatRegressionTest, DISABLED_WriteVersionOneFixture) {
-    IndexSerializer::saveToFile(*fixtureIndex(), fixturePath());
+std::filesystem::path fixturePath(std::string_view name) {
+    return std::filesystem::path{HOPFILTER_FIXTURE_DIR} / name;
+}
+
+TEST(IndexFormatRegressionTest, DISABLED_WriteVersionTwoFixture) {
+    IndexSerializer::saveToFile(*fixtureIndexWithAttributes(), fixturePath("index_format_v2.hopf"));
 }
 
 TEST(IndexFormatRegressionTest, VersionOneFixtureStillLoads) {
     const auto expected = fixtureIndex();
 
-    const auto loaded = IndexSerializer::loadFromFile(fixturePath());
+    const auto loaded = IndexSerializer::loadFromFile(fixturePath("index_format_v1.hopf"));
 
     EXPECT_EQ(loaded->size(), kFixturePoints);
     expectSameGraph(expected->graph(), loaded->graph());
+    EXPECT_TRUE(loaded->attributes().empty());
+}
+
+TEST(IndexFormatRegressionTest, VersionTwoFixtureLoadsWithAttributes) {
+    const auto expected = fixtureIndexWithAttributes();
+
+    const auto loaded = IndexSerializer::loadFromFile(fixturePath("index_format_v2.hopf"));
+
+    expectSameGraph(expected->graph(), loaded->graph());
+    EXPECT_EQ(loaded->attributes().categorical("bucket"),
+              expected->attributes().categorical("bucket"));
+    EXPECT_EQ(loaded->attributes().numeric("score"), expected->attributes().numeric("score"));
+}
+
+TEST(IndexSerializerTest, AttributesRoundTrip) {
+    const auto original = fixtureIndexWithAttributes();
+    original->setNumericAttribute("empty", {});
+
+    const auto restored = deserialized(serialized(*original));
+
+    EXPECT_EQ(restored->attributes().names(), original->attributes().names());
+    EXPECT_EQ(restored->attributes().numeric("score"), original->attributes().numeric("score"));
+    EXPECT_TRUE(restored->attributes().numeric("empty").empty());
 }
 
 }

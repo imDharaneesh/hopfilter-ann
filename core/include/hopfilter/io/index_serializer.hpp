@@ -13,7 +13,8 @@ namespace hopfilter {
 
 class IndexSerializer {
 public:
-    static constexpr std::uint32_t kFormatVersion = 1;
+    static constexpr std::uint32_t kFormatVersion = 2;
+    static constexpr std::uint32_t kOldestReadableVersion = 1;
 
     static void save(const HnswIndex& index, std::ostream& sink);
 

@@ -82,10 +82,10 @@ ctest --test-dir build -C Release --output-on-failure
 
 GoogleTest is downloaded by CMake on the first configure.
 
-`tests/fixtures/index_format_v1.hopf` is an index saved in format version 1, and the test suite checks that it still loads. Regenerate it only when you deliberately start a new format version:
+`tests/fixtures/` holds one index per format version: `index_format_v1.hopf` (no attributes) and `index_format_v2.hopf` (with a categorical and a numeric column). The test suite checks that both still load, which enforces the rule that a release reads its own format and the one before it. When you deliberately start a new format version, add a writer test for it next to `WriteVersionTwoFixture` and run it once:
 
 ```bash
-build/tests/cpp/Release/hopfilter_core_tests --gtest_also_run_disabled_tests --gtest_filter=*WriteVersionOneFixture
+build/tests/cpp/Release/hopfilter_core_tests --gtest_also_run_disabled_tests --gtest_filter=*WriteVersionTwoFixture
 ```
 
 ### CMake options
