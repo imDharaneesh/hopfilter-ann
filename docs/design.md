@@ -24,7 +24,7 @@ This document describes the architecture of hopfilter: its modules, their interf
 
 ## 2. System overview
 
-**Implemented:** build skeleton (Phase 0); data, model, training and exact evaluation (Phase 1); C++ HNSW core, serialization and Python bindings (Phase 2). **Planned:** SIMD and parallel build, filtered search, pipeline.
+**Implemented:** build skeleton (Phase 0); data, model, training and exact evaluation (Phase 1); C++ HNSW core, serialization and Python bindings (Phase 2); SIMD kernels and parallel build (Phase 3); attribute filters and filtered search strategies (Phase 4). **Planned:** pipeline.
 
 ```mermaid
 flowchart LR
@@ -85,6 +85,7 @@ flowchart TD
     io --> index
     index --> search
     index --> graph
+    index --> filter
     search --> graph
     search --> filter
     search --> distance
@@ -309,22 +310,37 @@ classDiagram
 
 - **Builder.** `HnswIndexBuilder::build()` is the only way to create an `HnswIndex`. It validates the config (positive dimension, `maxNeighbors >= 2`, `efConstruction >= maxNeighbors`, a known metric name) and throws `InvalidArgumentError` with a message naming the field. Anything the caller does not inject gets a default, such as `HeuristicNeighborSelector` or the registry metric for `metricName`.
 - **Dependency inversion.** `HnswIndex` never constructs its collaborators. It receives them from the builder, which is how tests inject a fake `LayerAssigner` to build a graph with known levels.
+- **Attributes.** The index owns an `AttributeStore`. `setCategoricalAttribute` and `setNumericAttribute` reject a column longer than `capacity`; `attributes()` gives read-only access for compiling filters.
 - **Interface segregation.** Benchmark adapters for FAISS and hnswlib implement only `Searchable`. Read-only consumers take a `const Searchable&`. There is no `Serializable` interface on the index: `io` depends on `index`, so the index implementing serialization would create a cycle. `IndexSerializer` is the single entry point.
 
-### 5.5 filter (Planned, Phase 4)
+### 5.5 filter (Phase 4)
 
 ```mermaid
 classDiagram
+    class DynamicBitset {
+        +set(position)
+        +test(position) bool
+        +popcount() size_t
+        +forEachSet(visit)
+    }
+    class AttributeStore {
+        +setCategorical(name, codes)
+        +setNumeric(name, values)
+        +categorical(name) const CategoricalColumn&
+        +numeric(name) const NumericColumn&
+        +names() vector~string~
+    }
     class FilterPredicate {
         <<interface>>
         +matches(id: NodeId) bool
+        +collectMatches(universeSize, out: vector~NodeId~)
     }
     class CategoryEquals {
-        -column_: const CategoricalColumn&
+        -column_: const CategoricalColumn*
         -value_: CategoryCode
     }
     class NumericRange {
-        -column_: const NumericColumn&
+        -column_: const NumericColumn*
         -low_: double
         -high_: double
     }
@@ -335,17 +351,24 @@ classDiagram
     class AndPredicate
     class OrPredicate
     class NotPredicate
-    class AttributeStore {
-        +addCategorical(name, codes)
-        +addNumeric(name, values)
-        +categorical(name) const CategoricalColumn&
-        +numeric(name) const NumericColumn&
+    class FilterExpression {
+        +equals(column, code)$ FilterExpression
+        +between(column, low, high)$ FilterExpression
+        +mask(DynamicBitset)$ FilterExpression
+        +allOf(children)$ FilterExpression
+        +anyOf(children)$ FilterExpression
+        +negation(child)$ FilterExpression
+        +compile(AttributeStore) unique_ptr~FilterPredicate~
+        +describe() string
     }
     class SelectivityEstimator {
         <<interface>>
         +estimate(predicate, universeSize) double
     }
-    class SamplingSelectivityEstimator
+    class SamplingSelectivityEstimator {
+        -sampleSize_: size_t
+        -seed_: uint64_t
+    }
     class ExactSelectivityEstimator
     FilterPredicate <|.. CategoryEquals
     FilterPredicate <|.. NumericRange
@@ -356,17 +379,22 @@ classDiagram
     AndPredicate o-- FilterPredicate
     OrPredicate o-- FilterPredicate
     NotPredicate o-- FilterPredicate
+    BitsetPredicate *-- DynamicBitset
     SelectivityEstimator <|.. SamplingSelectivityEstimator
     SelectivityEstimator <|.. ExactSelectivityEstimator
+    FilterExpression ..> AttributeStore : resolves columns
+    FilterExpression ..> FilterPredicate : compiles to
     CategoryEquals --> AttributeStore
     NumericRange --> AttributeStore
 ```
 
-- Attributes are stored column-wise, which keeps a predicate check to one array read and makes columns cheap to scan when building a bitset.
-- `AndPredicate`, `OrPredicate` and `NotPredicate` form a composite. Python filter expressions compile into this tree once per query.
-- `ExactSelectivityEstimator` materializes a `BitsetPredicate` and counts its set bits; it is exact but O(N). `SamplingSelectivityEstimator` evaluates the predicate on a fixed-seed sample of ids, which is fast and good enough to choose a strategy.
+- **Columns.** Attributes are stored column-wise: a `CategoricalColumn` is a `std::vector<CategoryCode>` (32-bit codes) and a `NumericColumn` is a `std::vector<double>`. A predicate check is one array read, and a column is cheap to scan when building a bitset. Setting a column under an existing name replaces it, whatever its kind. A row past the end of a column matches no predicate on that column, so vectors added after the attributes were set are excluded until their attributes are set too.
+- **Predicates** form a composite: `AndPredicate`, `OrPredicate` and `NotPredicate` own their children. `NumericRange` is closed on both ends. `collectMatches` appends every matching id below `universeSize`; the default walks all ids, and `BitsetPredicate` overrides it with a word-at-a-time scan.
+- **Expressions.** `FilterExpression` is an immutable value tree that does not know about any store. Python builds one with `Filter.equals(...) & Filter.between(...)`, and the bindings compile it into a predicate tree **once per `search` call**, not once per query. Compiling throws `InvalidArgumentError` for an unknown column, a column of the wrong kind, or `low > high`.
+- **Lifetime.** A compiled predicate points into the `AttributeStore` it was compiled against and must not outlive it, or survive a change to the columns it reads.
+- **Selectivity.** `ExactSelectivityEstimator` evaluates the predicate on every id: exact, O(N). `SamplingSelectivityEstimator` evaluates it on a fixed-seed random sample (1,024 ids by default), which costs a few microseconds and is accurate enough to choose a strategy. Both return the matching fraction in `[0, 1]`.
 
-### 5.6 search (Implemented unfiltered, Phase 4 filtered)
+### 5.6 search (Phase 2 unfiltered, Phase 4 filtered)
 
 ```mermaid
 classDiagram
@@ -380,9 +408,17 @@ classDiagram
     }
     class SearchContext {
         +graph: const HnswGraph&
-        +vectors: const VectorStore&
-        +metric: const DistanceMetric&
+        +distances: const NodeDistances&
         +visited: VisitedSet&
+    }
+    class FilteredSearchConfig {
+        +overFetchFactor: double
+        +rejectionWindow: size_t
+        +rejectionThreshold: double
+        +efGrowthFactor: double
+        +maxEf: size_t
+        +thresholds: AdaptiveThresholds
+        +selectivitySample: size_t
     }
     class UnfilteredStrategy
     class PostFilterStrategy {
@@ -390,15 +426,22 @@ classDiagram
     }
     class PreFilterStrategy
     class InGraphStrategy {
-        -efGrowthFactor_: double
-        -maxEf_: size_t
+        -schedule_: EfSchedule
     }
     class AdaptiveStrategy {
         -estimator_: unique_ptr~SelectivityEstimator~
+        -unfiltered_: unique_ptr~SearchStrategy~
         -postFilter_: unique_ptr~SearchStrategy~
         -inGraph_: unique_ptr~SearchStrategy~
         -exact_: unique_ptr~SearchStrategy~
         -thresholds_: AdaptiveThresholds
+        +plan(request, universeSize) FilterPlan
+    }
+    class SearchStrategyRegistry {
+        +withBuiltins(FilteredSearchConfig)$ SearchStrategyRegistry
+        +registerStrategy(name, factory)
+        +create(name) unique_ptr~SearchStrategy~
+        +names() vector~string~
     }
     SearchStrategy <|.. UnfilteredStrategy
     SearchStrategy <|.. PostFilterStrategy
@@ -406,19 +449,22 @@ classDiagram
     SearchStrategy <|.. InGraphStrategy
     SearchStrategy <|.. AdaptiveStrategy
     AdaptiveStrategy o-- SearchStrategy
+    SearchStrategyRegistry ..> SearchStrategy : creates
+    SearchStrategyRegistry ..> FilteredSearchConfig : reads
 ```
 
-| Strategy | How it handles a filter | Strength | Weakness |
-|---|---|---|---|
-| `UnfilteredStrategy` | Ignores the filter (the request must have none) | Fastest path | n/a |
-| `PostFilterStrategy` | Searches for `k * overFetchFactor` results, then drops non-matching ones | Free when most items match | Returns fewer than `k` results under strict filters |
-| `PreFilterStrategy` | Brute force over matching ids only | Exact; cheap when very few items match | O(matching * d) per query |
-| `InGraphStrategy` | Traverses the full graph and uses non-matching nodes as routing waypoints, but only matching nodes enter the result heap. Widens `ef` while the rejection rate is high | Keeps graph connectivity under medium selectivity | Visits more nodes than unfiltered search |
-| `AdaptiveStrategy` | Estimates selectivity, then delegates | Picks the cheapest correct option | Estimation cost per query; thresholds need tuning |
+| Registry name | Strategy | How it handles a filter | Strength | Weakness |
+|---|---|---|---|---|
+| `unfiltered` | `UnfilteredStrategy` | Rejects a request that carries one | Fastest path | n/a |
+| `post_filter` | `PostFilterStrategy` | Searches with `ef = max(efSearch, k * overFetchFactor)`, then drops non-matching results | Free when most items match | Returns fewer than `k` results under strict filters |
+| `pre_filter` | `PreFilterStrategy` | Collects the matching ids and ranks them by brute force | Exact; cheap when very few items match | O(N) predicate checks plus O(matching * d) distances per query |
+| `in_graph` | `InGraphStrategy` | Traverses the full graph; every node can route, only matching nodes enter the result heap; widens `ef` while the rejection rate is high | Keeps graph connectivity under medium selectivity | Visits more nodes than unfiltered search; degrades toward a scan as matches get rare |
+| `adaptive` | `AdaptiveStrategy` | Samples selectivity, then delegates | Picks the cheapest correct option | Estimation cost per query; thresholds need tuning |
 
-`AdaptiveThresholds` holds two cut-offs, `postFilterAbove` and `exactBelow`, both set from the Phase 4 sweep and stored in config rather than in code.
-
-`SearchContext` gives a strategy read-only access to the index internals plus a per-thread `VisitedSet`. Strategies therefore stay stateless, and one strategy instance serves all threads.
+- `HnswIndex` uses `adaptive` unless the builder injects another strategy. A request without a filter goes straight to the unfiltered path, so unfiltered searches pay nothing for filter support.
+- `AdaptiveStrategy::plan` returns the `FilterPlan` it would use (`Unfiltered`, `PostFilter`, `InGraph` or `Exact`). The rule: selectivity at or above `postFilterAbove` uses the post-filter, below `exactBelow` uses exact search, and anything in between uses in-graph search. Both thresholds live in `FilteredSearchConfig`, with defaults taken from the Phase 4 sweep.
+- `HnswIndex::search` has an overload that takes a `const SearchStrategy&`, which is how the benchmarks and the Python `strategy=` argument run one index under every strategy.
+- `SearchContext` gives a strategy read-only access to the index internals plus a per-thread `VisitedSet`. Strategies therefore stay stateless, and one strategy instance serves all threads.
 
 ### 5.7 io (Implemented)
 
@@ -429,7 +475,7 @@ classDiagram
 | Header | Magic `HOPF`, format version (uint32), endianness marker, `IndexConfig` fields |
 | Vectors | Row count and stride, then raw aligned rows |
 | Graph | Node levels, entry point, max level, level-0 link block, upper-level links |
-| Attributes | Optional: column names, types and values (Phase 4) |
+| Attributes | Format version 2: categorical columns, then numeric columns; each is a name, a row count and the raw values |
 | Footer | CRC-32 of every preceding byte |
 
 - Loading checks magic and version, validates every header field before allocating storage, bounds-checks each count and id, and verifies the CRC before returning an index. Any problem, including an allocation failure caused by a corrupt header, surfaces as `SerializationError`.
@@ -463,6 +509,8 @@ All follow Malkov and Yashunin (arXiv:1603.09320). Only the shape is described h
 | Batch search | `parallelFor` splits queries across threads; each query leases its own `VisitedSet` and reads the graph without locks |
 | `search` concurrent with `insert` | Not supported in v0.1. Documented, and asserted in debug builds |
 | `save` | Safe concurrently with `search`; not with `insert` |
+| Filtered `search` | Same as `search`. The compiled predicate is read-only and shared by every query of a batch |
+| Setting attributes | Not concurrent with `search` or `save`: replacing a column frees the storage a compiled predicate points into |
 | Python | The GIL is released inside `search` and batch `insert`, so Python threads scale |
 
 The TSan CI job runs a concurrent-search stress test, and from Phase 3 a parallel-build test.
@@ -471,7 +519,8 @@ The TSan CI job runs a concurrent-search stress test, and from Phase 3 a paralle
 
 ## 8. Ownership and memory
 
-- `HnswIndex` owns everything it uses through `std::unique_ptr` members. There are no shared pointers and no raw owning pointers.
+- `HnswIndex` owns everything it uses through `std::unique_ptr` members and plain containers. There are no shared pointers inside the index and no raw owning pointers anywhere.
+- `FilterExpression` is the one shared-ownership type: its nodes are immutable and held by `std::shared_ptr<const Node>`, so combining two expressions in Python copies two pointers instead of two trees.
 - Strategies, selectors and predicates hold `const&` to data they do not own. Their lifetime is bounded by the call or by the owning index.
 - Memory per item is roughly `4 * stride + 4 * (2M + 1) + small upper-level overhead`. Phase 3 reports measured peak memory next to this estimate.
 
@@ -736,8 +785,8 @@ classDiagram
 |---|---|---|---|
 | A distance metric | `DistanceMetric` | `MetricRegistry` | No |
 | A neighbor selection rule | `NeighborSelector` | `HnswIndexBuilder::withNeighborSelector` | No |
-| A filtered search strategy | `SearchStrategy` | Strategy registry / `AdaptiveStrategy` delegates | No |
-| A predicate type | `FilterPredicate` | Filter expression compiler | Compiler only |
+| A filtered search strategy | `SearchStrategy` | `SearchStrategyRegistry` | No |
+| A predicate type | `FilterPredicate` | A new `FilterExpression` node kind | `FilterExpression` only |
 | A dataset | `DatasetLoader` | Dataset registry | No |
 | A loss | `LossFunction` | Loss registry | No |
 | A baseline library | `AnnIndex` adapter | Benchmark config | No |
