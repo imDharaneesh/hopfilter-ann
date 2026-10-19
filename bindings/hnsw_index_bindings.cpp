@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <utility>
@@ -18,11 +19,17 @@
 #include <hopfilter/common/errors.hpp>
 #include <hopfilter/common/parallel.hpp>
 #include <hopfilter/distance/kernels.hpp>
+#include <hopfilter/filter/attribute_store.hpp>
+#include <hopfilter/filter/filter_expression.hpp>
+#include <hopfilter/filter/filter_predicate.hpp>
 #include <hopfilter/index/hnsw_index.hpp>
 #include <hopfilter/index/hnsw_index_builder.hpp>
 #include <hopfilter/index/index_config.hpp>
 #include <hopfilter/io/index_serializer.hpp>
+#include <hopfilter/search/adaptive_strategy.hpp>
 #include <hopfilter/search/search_context.hpp>
+#include <hopfilter/search/search_strategy.hpp>
+#include <hopfilter/search/strategy_registry.hpp>
 
 namespace hopfilter::bindings {
 namespace {
@@ -95,15 +102,29 @@ void writeRow(const SearchResults& results,
     }
 }
 
+const SearchStrategyRegistry& strategies() {
+    static const SearchStrategyRegistry registry = SearchStrategyRegistry::withBuiltins();
+    return registry;
+}
+
+PredicatePtr compiled(const HnswIndex& index, const std::optional<FilterExpression>& filter) {
+    return filter ? filter->compile(index.attributes()) : nullptr;
+}
+
 py::tuple searchBatch(const HnswIndex& index,
                       const FloatMatrix& queries,
                       std::size_t k,
                       std::size_t ef,
-                      std::size_t threads) {
+                      std::size_t threads,
+                      const std::optional<FilterExpression>& filter,
+                      const std::string& strategyName) {
     requireMatrixOf(queries, index.dimension(), "queries");
     if (k == 0) {
         throw InvalidArgumentError("k must be positive");
     }
+    const auto predicate = compiled(index, filter);
+    const auto strategy = strategies().create(strategyName);
+    const SearchRequest request{ef, predicate.get()};
     const py::ssize_t count = queries.shape(0);
     IdMatrix ids({count, static_cast<py::ssize_t>(k)});
     DistanceMatrix distances({count, static_cast<py::ssize_t>(k)});
@@ -114,11 +135,67 @@ py::tuple searchBatch(const HnswIndex& index,
         parallelFor(static_cast<std::size_t>(count), threads, [&](std::size_t position) {
             const auto query = static_cast<py::ssize_t>(position);
             const auto results =
-                index.search(row(queries, query, index.dimension()), k, SearchRequest{ef});
+                index.search(row(queries, query, index.dimension()), k, request, *strategy);
             writeRow(results, query, idView, distanceView);
         });
     }
     return py::make_tuple(std::move(ids), std::move(distances));
+}
+
+template <typename Code>
+CategoricalColumn categoricalCodes(const py::array& values) {
+    const auto typed = py::array_t<Code, py::array::c_style | py::array::forcecast>::ensure(values);
+    const auto view = typed.template unchecked<1>();
+    CategoricalColumn codes(static_cast<std::size_t>(view.shape(0)));
+    for (py::ssize_t row = 0; row < view.shape(0); ++row) {
+        const auto code = view(row);
+        if (code < 0 ||
+            static_cast<std::uint64_t>(code) > std::numeric_limits<CategoryCode>::max()) {
+            throw InvalidArgumentError("categorical codes must be in [0, 2**32 - 1]");
+        }
+        codes[static_cast<std::size_t>(row)] = static_cast<CategoryCode>(code);
+    }
+    return codes;
+}
+
+NumericColumn numericValues(const py::array& values) {
+    const auto typed =
+        py::array_t<double, py::array::c_style | py::array::forcecast>::ensure(values);
+    const auto view = typed.unchecked<1>();
+    NumericColumn column(static_cast<std::size_t>(view.shape(0)));
+    for (py::ssize_t row = 0; row < view.shape(0); ++row) {
+        column[static_cast<std::size_t>(row)] = view(row);
+    }
+    return column;
+}
+
+void setAttribute(HnswIndex& index, std::string name, const py::array& values) {
+    if (values.ndim() != 1) {
+        throw InvalidArgumentError("attribute values must be one-dimensional");
+    }
+    const char kind = values.dtype().kind();
+    if (kind == 'b' || kind == 'i' || kind == 'u') {
+        index.setCategoricalAttribute(std::move(name), categoricalCodes<std::int64_t>(values));
+    } else if (kind == 'f') {
+        index.setNumericAttribute(std::move(name), numericValues(values));
+    } else {
+        throw InvalidArgumentError("attribute '" + name +
+                                   "' must hold integers (categorical) or floats (numeric)");
+    }
+}
+
+std::string planFor(const HnswIndex& index, const FilterExpression& filter, std::size_t ef) {
+    const auto predicate = filter.compile(index.attributes());
+    const auto adaptive = AdaptiveStrategy::withDefaults();
+    return std::string{
+        filterPlanName(adaptive->plan(SearchRequest{ef, predicate.get()}, index.size()))};
+}
+
+std::size_t countMatching(const HnswIndex& index, const FilterExpression& filter) {
+    const auto predicate = filter.compile(index.attributes());
+    std::vector<NodeId> matches;
+    predicate->collectMatches(index.size(), matches);
+    return matches.size();
 }
 
 KernelSet kernelSetNamed(const std::string& name) {
@@ -166,7 +243,16 @@ void bindHnswIndex(py::module_& module) {
              py::arg("queries"),
              py::arg("k"),
              py::arg("ef") = kDefaultEfSearch,
-             py::arg("threads") = 0)
+             py::arg("threads") = 0,
+             py::arg("filter") = std::nullopt,
+             py::arg("strategy") = std::string{kAdaptiveStrategyName})
+        .def("set_attribute", &setAttribute, py::arg("name"), py::arg("values"))
+        .def("plan_filter", &planFor, py::arg("filter"), py::arg("ef") = kDefaultEfSearch)
+        .def("count_matching", &countMatching, py::arg("filter"))
+        .def_property_readonly("attribute_names",
+                               [](const HnswIndex& index) { return index.attributes().names(); })
+        .def_property_readonly_static("strategies",
+                                      [](const py::object&) { return strategies().names(); })
         .def(
             "save",
             [](const HnswIndex& index, const std::filesystem::path& path) {

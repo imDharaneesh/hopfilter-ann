@@ -4,6 +4,7 @@ find_package(pybind11 CONFIG REQUIRED)
 pybind11_add_module(_core MODULE
     module.cpp
     error_translation.cpp
+    filter_bindings.cpp
     hnsw_index_bindings.cpp
 )
 target_link_libraries(_core PRIVATE hopfilter::core)
