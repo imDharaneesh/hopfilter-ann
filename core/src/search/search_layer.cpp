@@ -41,6 +41,9 @@ public:
             if (isFull() && worseThanWorstResult(closest.distance)) {
                 return;
             }
+            if (!candidates_.empty()) {
+                context_->graph().prefetchNeighbors(candidates_.front().id, level);
+            }
             expand(closest.id, level);
         }
     }
@@ -66,6 +69,7 @@ private:
         const auto neighbors = neighborsOf(node, level);
         for (std::size_t position = 0; position < neighbors.size(); ++position) {
             if (position + 1 < neighbors.size()) {
+                context_->visited().prefetch(neighbors[position + 1]);
                 context_->distances().prefetch(neighbors[position + 1]);
             }
             visit(neighbors[position]);

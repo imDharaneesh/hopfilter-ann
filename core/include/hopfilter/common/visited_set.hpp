@@ -6,6 +6,7 @@
 #include <mutex>
 #include <vector>
 
+#include <hopfilter/common/prefetch.hpp>
 #include <hopfilter/common/types.hpp>
 
 namespace hopfilter {
@@ -28,6 +29,9 @@ public:
     [[nodiscard]] bool markVisited(NodeId id) noexcept;
 
     [[nodiscard]] bool isVisited(NodeId id) const noexcept;
+
+    /// Starts loading the stamp of ``id`` into cache ahead of ``markVisited``.
+    void prefetch(NodeId id) const noexcept { prefetchForRead(&stamps_[id]); }
 
     [[nodiscard]] std::size_t capacity() const noexcept { return stamps_.size(); }
 

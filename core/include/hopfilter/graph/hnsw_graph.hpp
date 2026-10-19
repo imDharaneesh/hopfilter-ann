@@ -34,6 +34,9 @@ public:
     /// Neighbors of ``id`` on ``level``. ``level`` must not exceed ``levelOf(id)``.
     [[nodiscard]] std::span<const NodeId> neighbors(NodeId id, LevelIndex level) const noexcept;
 
+    /// Starts loading the neighbor list of ``id`` on ``level`` into cache.
+    void prefetchNeighbors(NodeId id, LevelIndex level) const noexcept;
+
     /// Replaces the neighbors of ``id`` on ``level``. Throws InvalidArgumentError if
     /// ``level`` is above the node's top layer or there are too many neighbors.
     void setNeighbors(NodeId id, LevelIndex level, std::span<const NodeId> neighbors);

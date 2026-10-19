@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <hopfilter/common/errors.hpp>
+#include <hopfilter/common/prefetch.hpp>
 #include <hopfilter/common/types.hpp>
 #include <hopfilter/graph/hnsw_graph.hpp>
 
@@ -62,6 +63,10 @@ NodeId HnswGraph::addNode(LevelIndex level) {
 std::span<const NodeId> HnswGraph::neighbors(NodeId id, LevelIndex level) const noexcept {
     const auto links = slotOf(*this, id, level);
     return links.subspan(kCountSlots, links.front());
+}
+
+void HnswGraph::prefetchNeighbors(NodeId id, LevelIndex level) const noexcept {
+    prefetchForRead(slotOf(*this, id, level).data());
 }
 
 void HnswGraph::setNeighbors(NodeId id, LevelIndex level, std::span<const NodeId> neighbors) {
